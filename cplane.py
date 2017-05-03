@@ -8,13 +8,19 @@ import time
 import random
 import sys
 import requests
+import json
 from flow import Flow
 from port import Port
-
+# ###############
+import tornado.httpclient
+import tornado.httpserver
+import tornado.ioloop
+import tornado.queues
+import tornado.web
+import threading
 # ###############
 from lldp import *
 # == config ====================
-import json
 
 
 # == sanity checks
@@ -540,9 +546,33 @@ def process_cpu_pkt(p):
     except Exception as e:
        print e 
 
-def main():
+# == South bound interface ==================================
+class RESTRequestHandlerCmds(tornado.web.RequestHandler):
+    # POST /host
+    def post(self):
+        results = list();
+        self.set_header("Content-Type", 'application/json; charset="utf-8"')
+        params = json.loads(self.request.body.decode())
+        print "Execute commands: ", str(params["commands"])
+        for cmd in params["commands"]:
+           r = send_to_CLI(cmd, params["thrift_port"])
+           results.append((cmd, r))
+        self.set_status(201)
+        self.finish(json.dumps({"output":results}))
+
+def south_bound():
+    # launch server
+    rest_app = tornado.web.Application([
+           ("/commands", RESTRequestHandlerCmds)
+           ])
+    rest_server = tornado.httpserver.HTTPServer(rest_app)
+    lport = 8000 + int(  switch_name[1:]  )
+    rest_server.listen(lport)
+    tornado.ioloop.IOLoop.current().start()
+# ============================================================
+
+def slow_path():
     print "#Q\tV*dk\ta"
-#    sniff_iface = "cpu-veth-1"
     sniff(iface=cpu_iface, prn=lambda x: process_cpu_pkt(x))
 
 if __name__ == '__main__':
@@ -553,4 +583,10 @@ if __name__ == '__main__':
  
     last_update = time.time()
     Q = 0.0
-    main()
+
+    # Launch southbound interface 
+    t = threading.Thread(target=south_bound)
+    t.start()
+
+    # Listen slow-path events
+    slow_path()
