@@ -1,0 +1,21 @@
+{"directed": false, 
+	"graph": {},
+	"nodes": [
+	{"API": "http://127.0.0.1:8080", "type": "switch", "id": "s13", "thrift_port": 45013},
+	{"API": "http://127.0.0.1:8080", "type": "switch", "id": "s12", "thrift_port": 45012},
+	{"API": "http://127.0.0.1:8080", "type": "switch", "id": "s11", "thrift_port": 45011},
+	{"ip": "192.0.2.21", "type": "host", "id": "h21"},
+	{"API": "http://127.0.0.1:8080", "type": "switch", "id": "s14", "thrift_port": 45014},
+	{"API": "http://127.0.0.1:8080", "type": "switch", "id": "s22", "thrift_port": 45022},
+	{"API": "http://127.0.0.1:8080", "type": "switch", "id": "s23", "thrift_port": 45023},
+	{"API": "http://127.0.0.1:8080", "type": "switch", "id": "s21", "thrift_port": 45021},
+	{"API": "http://127.0.0.1:8080", "type": "switch", "id": "s24", "thrift_port": 45024},
+	{"ip": "192.0.2.11", "type": "host", "id": "h11"},
+	{"ip": "192.0.2.22", "type": "host", "id": "h22"},
+	{"ip": "192.0.2.12", "type": "host", "id": "h12"}],
+	"links": [
+	{"source": 2, "s11": 3, "h12": 1, "target": 11},
+	{"h11": 1, "s11": 4, "target": 9, "source": 2},
+	{"source": 3, "s21": 1, "h21": 1, "target": 7},
+	{"source": 7, "s21": 4, "target": 10, "h22": 1}],
+	"multigraph": false}
