@@ -13,5 +13,4 @@ Start the control plane demons:
 $ sudo sh switches.sh
 
 Generate some traffic:
-
 mininet> pingall
