@@ -797,36 +797,8 @@
             ]
         },
         {
-            "name": "set_out_port",
-            "id": 3,
-            "runtime_data": [
-                {
-                    "name": "iface",
-                    "bitwidth": 9
-                }
-            ],
-            "primitives": [
-                {
-                    "op": "modify_field",
-                    "parameters": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "standard_metadata",
-                                "egress_spec"
-                            ]
-                        },
-                        {
-                            "type": "runtime_data",
-                            "value": 0
-                        }
-                    ]
-                }
-            ]
-        },
-        {
             "name": "do_cpu_encap",
-            "id": 4,
+            "id": 3,
             "runtime_data": [],
             "primitives": [
                 {
@@ -905,6 +877,34 @@
                                 "super_meta",
                                 "ingress_port"
                             ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "set_out_port",
+            "id": 4,
+            "runtime_data": [
+                {
+                    "name": "iface",
+                    "bitwidth": 9
+                }
+            ],
+            "primitives": [
+                {
+                    "op": "modify_field",
+                    "parameters": [
+                        {
+                            "type": "field",
+                            "value": [
+                                "standard_metadata",
+                                "egress_spec"
+                            ]
+                        },
+                        {
+                            "type": "runtime_data",
+                            "value": 0
                         }
                     ]
                 }
