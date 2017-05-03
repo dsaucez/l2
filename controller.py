@@ -17,8 +17,6 @@ with open("topology_ctr.json", "r") as topo_file:
     G = json_graph.node_link_graph(G_json)
 
 _T = nx.minimum_spanning_tree(G)
-print G.nodes()
-print _T.nodes()
 
 # #################################  
 
