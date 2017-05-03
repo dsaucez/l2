@@ -1,0 +1,1 @@
+{"thrift_port": 45012, "switch_name": "s12", "cpu_iface": "cpu-veth-s12", "controller_ip": "127.0.0.1", "ports": [{"index": 1, "mac": "1e:de:ad:de:ad:5", "prefix": "198.51.100.0/24", "name": "s12-eth1", "ip": "198.51.100.5"}, {"index": 2, "mac": "1e:de:ad:de:ad:7", "prefix": "198.51.100.0/24", "name": "s12-eth2", "ip": "198.51.100.7"}], "controller_port": 8000}

@@ -59,6 +59,7 @@ global last_update
 
 def load_config(filename):
     global switch_name 
+    global api_url
     global thrift_port
     global cpu_iface
     global controller_port
@@ -368,7 +369,7 @@ def process_arp(arp_hdr, port):
     Process ARP message `arp_hdr` received on a `port` of the switch.
 
     See _process_arp_request(arp_hdr, port) for ARP requests
-    S22 _process_arp_response(arp_hdr, port) for ARP responses
+    See _process_arp_response(arp_hdr, port) for ARP responses
 
     :param arp_hdr: ARP header from scapy
     :type arp_hdr: scapy.layers.l2.ARP
@@ -387,10 +388,21 @@ def process_arp(arp_hdr, port):
 
 
 def process_lldp(lldp_str, port):
+    """
+    Process LLDP message `lldp_str` received on a `port` of the switch.
+
+    Notify the controller (see /link) when a new port is discovered.
+
+    :param lldp_str: raw LLDP packet
+    :type lldp_str: string
+    :param port: port index on which the ARP has been received
+    :type port: int
+    """
     chassis_tlv = Chassis_Id(lldp_str)
     port_tlv = Port_Id(lldp_str[(chassis_tlv.length+2):])
     print "learned %s:%d on port %d " % (chassis_tlv.locallyAssigned, int(port_tlv.locallyAssigned), port)
 
+    # link parameters (see controller API /link)
     data = {
        "src":chassis_tlv.locallyAssigned,
        "dst":switch_name,
