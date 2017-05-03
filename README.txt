@@ -1,14 +1,17 @@
 
-Start the router:
-
-$ sudo ./cleanup.sh
-$ sudo ./run_demo.sh 
+Start the network:
+$ sudo ./cleanup2.sh && sudo ./run_demo2.sh
 
 
 Start the controller:
+$ python controller.py
 
-$ sudo ./cplane.py
+Start the south bound interface:
+$ python south_bound.py 8080
 
-Generate traffic:
+Start the control plane demons:
+$ sudo sh switches.sh
 
-mininet> H1 echo "coucou" | nc H2 80
+Generate some traffic:
+
+mininet> pingall
