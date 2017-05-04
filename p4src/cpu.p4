@@ -38,7 +38,6 @@ table redirect {
     size : 16;
 }
 
-
 action add_flow() {
 	modify_field(super_meta.fast, 0);
 	clone_ingress_pkt_to_egress(250, copy_to_cpu_fields);
