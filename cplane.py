@@ -19,8 +19,8 @@ import tornado.queues
 import tornado.web
 import threading
 # ###############
-from lldp import *
-from cpu import CPUHeader
+import lldp
+import cpu
 # == config ====================
 
 # == sanity checks
@@ -312,7 +312,6 @@ def _process_arp_request(arp_hdr, port):
     :param port: port index on which the ARP request has been received
     :type port: int
     """
-
     # update the local IP:MAC cache and inform the controller about the newly
     # learned association.
     if arp_hdr.psrc not in ip_dic.keys():
@@ -354,18 +353,21 @@ def _process_arp_response(arp_hdr, port):
     """
     pass
 
-def process_arp(arp_hdr, port):
+def process_arp(ether_hdr, port):
     """
     Process ARP message `arp_hdr` received on a `port` of the switch.
 
     See _process_arp_request(arp_hdr, port) for ARP requests
     See _process_arp_response(arp_hdr, port) for ARP responses
 
-    :param arp_hdr: ARP header from scapy
-    :type arp_hdr: scapy.layers.l2.ARP
+    :param arp_hdr: Ethernet header from scapy
+    :type arp_hdr: scapy.layers.l2.Ether
     :param port: port index on which the ARP has been received
     :type port: int
     """
+    # extract ARP header
+    arp_hdr = ether_hdr['ARP']
+
     # ARP request
     if arp_hdr.op == 1:
        _process_arp_request(arp_hdr, port)
@@ -377,19 +379,21 @@ def process_arp(arp_hdr, port):
        raise Exception("Unsupport ARP type")
 
 
-def process_lldp(lldp_str, port):
+def process_lldp(ether_hdr, port):
     """
-    Process LLDP message `lldp_str` received on a `port` of the switch.
+    Process LLDP message `ether_hdr` received on a `port` of the switch.
 
     Notify the controller (see /link) when a new port is discovered.
 
-    :param lldp_str: raw LLDP packet
-    :type lldp_str: string
-    :param port: port index on which the ARP has been received
+    :param ether_hdr: Ethernet header from scapy
+    :type ether_hdr: scapy.layers.l2.Ether
+    :param port: port index on which the LLDP has been received
     :type port: int
     """
-    chassis_tlv = Chassis_Id(lldp_str)
-    port_tlv = Port_Id(lldp_str[(chassis_tlv.length+2):])
+
+    # extract LLDP header
+    chassis_tlv = ether_hdr['Chassis ID'] 
+    port_tlv = ether_hdr['Port ID'] 
     print "learned %s:%d on port %d " % (chassis_tlv.locallyAssigned, int(port_tlv.locallyAssigned), port)
 
     # link parameters (see controller API /link)
@@ -413,6 +417,7 @@ def process_cpu_pkt(p):
 
     # data to decide the frame treatement
     ether_type = None
+    if_index = None
 
     # data to decide flow information (5-tuple)
     protocol = None
@@ -423,6 +428,7 @@ def process_cpu_pkt(p):
     
     # Ethernet
     try:
+       # extract Ethernet header
        ether_hdr = Ether(p_str)
 
        # treat only CPU messages
@@ -430,15 +436,10 @@ def process_cpu_pkt(p):
          raise Exception("Not a CPU message")
 
        # extract CPU header
-       cpu_hdr = CPUHeader(p_str[14:26])
-
-       # remove CPU header and set the correct ethertype
-       p_str2 = p_str[:12] + p_str[24:26] + p_str[26:]
-
-       # parse Ethernet frame
-       ether_hdr = Ether(p_str2)
-       ether_type = ether_hdr.type
-       print "Ethernet"
+       cpu_hdr = ether_hdr['CPUHeader'] 
+       if_index = cpu_hdr.ifIndex
+       ether_type = cpu_hdr.etherType
+       print "Ethernet", ether_type
     except Exception as e:
        print "Error extracting Ethernet", e
        return
@@ -446,8 +447,7 @@ def process_cpu_pkt(p):
     # ARP
     if ether_type == 0x0806:
        try:
-          arp_hdr = ether_hdr['ARP']
-          process_arp(arp_hdr, cpu_hdr.ifIndex)
+          process_arp(ether_hdr, if_index)
           print "\tARP"
           return
        except Exception as e:
@@ -456,7 +456,7 @@ def process_cpu_pkt(p):
     # LLDP
     elif ether_type == 0x88cc:
        try:
-          process_lldp(p_str2[14:], cpu_hdr.ifIndex)
+          process_lldp(ether_hdr, if_index)
           print "LLDP"
           return
        except Exception as e:
@@ -575,6 +575,15 @@ if __name__ == '__main__':
 
     load_config(sys.argv[1])
  
+    # Scapy bindings
+    bind_layers(Ether, cpu.CPUHeader, type=0xDEAD )
+    bind_layers(cpu.CPUHeader, ARP, etherType=0x0806 )
+    bind_layers(cpu.CPUHeader, lldp.Chassis_Id, etherType=0x88cc )
+    bind_layers(cpu.CPUHeader, IP, etherType=0x0800 )
+    bind_layers(lldp.Chassis_Id, lldp.Port_Id)
+    bind_layers(lldp.Port_Id, lldp.TTL)
+
+    # virtual queue
     last_update = time.time()
     Q = 0.0
 
