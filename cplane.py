@@ -20,8 +20,8 @@ import tornado.web
 import threading
 # ###############
 from lldp import *
+from cpu import CPUHeader
 # == config ====================
-
 
 # == sanity checks
 if len(sys.argv) != 2:
@@ -44,7 +44,6 @@ ip_dic = dict()
 # ports[index] = <Port>
 ports = dict()
 
-
 abar = 0.8
 V = 1.0
 
@@ -54,8 +53,6 @@ random.seed(10)
 
 global Q
 global last_update
-
-
 
 def load_config(filename):
     global switch_name 
@@ -258,16 +255,9 @@ def _update_mac(ip, mac, port, controller=False):
         ctrl = "%s:%s" % (controller_ip, controller_port)
         r = requests.post("http://%s/host" % (ctrl), data = json.dumps(_host), headers={"Content-Type": "application/json", "X-switch-name":switch_name})
 
-
-#OLD#    # Update the switch
-#OLD#    cmd = "table_add arp_table set_dst_mac %s => %s" % (ip, mac)
-#OLD#    send_to_CLI(cmd, cli_port=thrift_port)
     # LEARN MAC on port
     cmd = "table_add mac_table set_out_port %s => %d" % (mac, port)
     send_to_CLI(cmd, cli_port=thrift_port)
-#OLD#    # add a FIB entry for the node
-#OLD#    cmd = "table_add fib_table set_next_hop %s/32 => %s %d" % (ip, ip, port)
-#OLD#    send_to_CLI(cmd, cli_port=thrift_port)
 
 # arp_hdr.pdst
 def _get_mac(ip):
@@ -417,12 +407,11 @@ def process_lldp(lldp_str, port):
 def process_cpu_pkt(p):
     # Get info about the new flow
     p_str = str(p)	# raw packet
-    ether_hdr = None	# ethernet header
-    ip_hdr = None	# ip header
+    ether_hdr = None	# Ethernet header
+    cpu_hdr = None      # CPU header
+    ip_hdr = None	# IP header
 
     # data to decide the frame treatement
-    preambule = None
-    ingress_port = None
     ether_type = None
 
     # data to decide flow information (5-tuple)
@@ -440,16 +429,9 @@ def process_cpu_pkt(p):
        if ether_hdr.type != 0xDEAD:
          raise Exception("Not a CPU message")
 
-       hf = lambda x:"".join([hex(ord(c))[2:].zfill(2) for c in x])  # get raw packet in hexa
-       # CPU header
-       # 0-8: preambule
-       # 8-10: ingress port
-       # 10-12: ethertype
-       # Note: starts just after the ethernet header (size = 14 bytes)
-       preambule    = int(hf(p_str[14:22]), 16)
-       ingress_port = int(hf(p_str[22:24]), 16)
-       ether_type = int(hf(p_str[24:26]), 16)
-      
+       # extract CPU header
+       cpu_hdr = CPUHeader(p_str[14:26])
+
        # remove CPU header and set the correct ethertype
        p_str2 = p_str[:12] + p_str[24:26] + p_str[26:]
 
@@ -465,7 +447,7 @@ def process_cpu_pkt(p):
     if ether_type == 0x0806:
        try:
           arp_hdr = ether_hdr['ARP']
-          process_arp(arp_hdr, ingress_port)
+          process_arp(arp_hdr, cpu_hdr.ifIndex)
           print "\tARP"
           return
        except Exception as e:
@@ -474,7 +456,7 @@ def process_cpu_pkt(p):
     # LLDP
     elif ether_type == 0x88cc:
        try:
-          process_lldp(p_str2[14:], ingress_port)
+          process_lldp(p_str2[14:], cpu_hdr.ifIndex)
           print "LLDP"
           return
        except Exception as e:

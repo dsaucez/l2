@@ -25,6 +25,6 @@ def main(filename):
                print port["mac"], " ", port["index"], "on", port["name"]
                packet = create_lldp_packet(mac_addr = port["mac"], switch_name = switch_name, port_id = str(port["index"]))
                send_packet(packet, port["name"])
-           time.sleep(60)
+           time.sleep(30)
 
 main(filename)
