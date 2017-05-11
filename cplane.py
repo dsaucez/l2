@@ -1,33 +1,33 @@
 #!/usr/bin/python
+# General
 from scapy.all import *
 import subprocess
 from subprocess import Popen, PIPE
 import os
-import ipaddress
 import time
 import random
 import sys
-import requests
 import json
-from flow import Flow
-from port import Port
-# ###############
-import tornado.httpclient
+
+# REST API
 import tornado.httpserver
 import tornado.ioloop
-import tornado.queues
 import tornado.web
 import threading
-# ###############
+import requests
+
+# Project
+from flow import Flow
+from port import Port
 import lldp
 import cpu
+
 # == config ====================
 
 # == sanity checks
 if len(sys.argv) != 2:
    print "usage %s <configuration file>" % (sys.argv[0])
    exit(-1)
-
 # ===================
 # cannonical name of the switch
 switch_name = None

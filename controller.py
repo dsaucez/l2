@@ -1,16 +1,23 @@
-import tornado.httpclient
-import tornado.httpserver
-import tornado.ioloop
-import tornado.queues
-import tornado.web
+
+# General
 import json
 import time
 import uuid
-from flow import Flow
+
+# REST API
+import tornado.httpserver
+import tornado.ioloop
+import tornado.web
 import requests
 
+# Routing
 import networkx as nx
 from networkx.readwrite import json_graph
+
+# Project
+from flow import Flow
+from host import Host
+
 
 with open("topology_ctr.json", "r") as topo_file:
     G_json = json.load(topo_file)
@@ -19,34 +26,6 @@ with open("topology_ctr.json", "r") as topo_file:
 _T = nx.minimum_spanning_tree(G)
 
 # #################################  
-
-
-class Host:
-    def __init__(self, ip, mac, switch, switch_port):
-        self.ip = ip
-        self.mac = mac
-        self.switch = switch
-        self.switch_port = switch_port
-        self.uuid = uuid.uuid1()
-
-    def update(self, mac, switch, switch_port):
-        self.mac = mac
-        self.switch = switch
-        self.switch_port = switch_port
-
-    def __str__(self):
-        return str(self.uuid)
-
-    def attributes(self):
-        return {
-            "ip": self.ip,
-            "mac": self.mac,
-            "switch":self.switch,
-            "switch_port":self.switch_port,
-            "uuid": str(self.uuid),
-            "local_port": -1
-            }
-
 hosts = dict()
 PORT = 8000
 
