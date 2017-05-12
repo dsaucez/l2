@@ -229,13 +229,19 @@ def optimal(flow):
 def send_to_CLI(cmd, cli_ip, cli_port):
     """
     Send the command `cmd` to the CLI of the P4 switch
+
+    :param cmd: command to be executed by the CLI
+    :type cmd: string
+    :param cli_ip: IP address of the CLI
+    :type cli_ip: string
+    :param cli_port: port number of the CLI
+    :type cli_port: int
     """
     this_dir = os.path.dirname(os.path.realpath(__file__))
     args = [os.path.join(this_dir, "sswitch_CLI.sh"), str(cli_ip), str(cli_port)]
     print args, cmd
     p = Popen(args, stdout=PIPE, stdin=PIPE)
     output = p.communicate(input=cmd)[0]
-#    print output
 
 
 def _update_mac(ip, mac, port, controller=False):
@@ -423,10 +429,20 @@ def process_lldp(ether_hdr, port):
     ctrl = "%s:%s" % (controller_ip, controller_port)
     response = requests.post("http://%s/link" % (ctrl), data = json.dumps(data), headers={"Content-Type": "application/json","X-switch-name":switch_name})
 
-def process_cpu_pkt(p):
+def process_cpu_pkt(ether_hdr):
+    """
+    Process packet `p` received on the slow path.
+    Extract flow information from CPU packet and optimize the flow according to
+    the policy
+
+    Specfic cases:
+      o See process_arp() for ARP
+      o See process_lldp() for LLDP
+
+    :param p: packet to be processed
+    :type p: scapy.layers.l2.Ether
+    """
     # Get info about the new flow
-    p_str = str(p)	# raw packet
-    ether_hdr = None	# Ethernet header
     cpu_hdr = None      # CPU header
     ip_hdr = None	# IP header
 
@@ -441,11 +457,8 @@ def process_cpu_pkt(p):
     srcPort = None
     dstPort = None
     
-    # Ethernet
+    # CPU
     try:
-       # extract Ethernet header
-       ether_hdr = Ether(p_str)
-
        # treat only CPU messages
        if ether_hdr.type != 0xDEAD:
          raise Exception("Not a CPU message")
@@ -454,9 +467,9 @@ def process_cpu_pkt(p):
        cpu_hdr = ether_hdr['CPUHeader'] 
        if_index = cpu_hdr.ifIndex
        ether_type = cpu_hdr.etherType
-       print "Ethernet", ether_type
+       print "CPU", ether_type
     except Exception as e:
-       print "Error extracting Ethernet", e
+       print "Error extracting CPU", e
        return
 
     # ARP
@@ -570,17 +583,31 @@ class RESTRequestHandlerCmds(tornado.web.RequestHandler):
         self.finish(json.dumps({"output":results}))
 
 def south_bound():
-    # launch server
+    """
+    Launch the south-bound REST API
+
+    Listens on port defined by `API` configuration attribute
+    """
+    # map API to handlers
     rest_app = tornado.web.Application([
            ("/commands", RESTRequestHandlerCmds)
            ])
     rest_server = tornado.httpserver.HTTPServer(rest_app)
-    lport = 8000 + int(  switch_name[1:]  )
+    
+    # get the port to listen on
+    lport = int(API.split(":")[-1])   
+
+    # start the server
     rest_server.listen(lport)
     tornado.ioloop.IOLoop.current().start()
 # ============================================================
 
 def slow_path():
+    """
+    Listens for packets on CPU interface
+    
+    see process_cpu_pkt()
+    """
     print "#Q\tV*dk\ta"
     sniff(iface=cpu_iface, prn=lambda x: process_cpu_pkt(x))
 

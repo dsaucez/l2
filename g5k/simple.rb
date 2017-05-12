@@ -10,8 +10,8 @@ Distem.client { |cl|
 
   cl.vnetwork_create('adm', '220.0.0.0/8', {'network_type' => 'vxlan'})
 
-  cl.vnetwork_create('vnet10-11', '10.10.11.0/24', {'network_type' => 'vxlan'})
-  cl.vnetwork_create('vnet10-12', '10.10.12.0/24', {'network_type' => 'vxlan'})
+  cl.vnetwork_create('vnet10-11', '10.42.0.0/16', {'network_type' => 'vxlan'})
+  cl.vnetwork_create('vnet10-12', '10.42.0.0/16', {'network_type' => 'vxlan'})
   
   nodes = ['h11', 'h12', 's10']
   cl.vnode_create('h11',
@@ -20,7 +20,7 @@ Distem.client { |cl|
            'vfilesystem' =>{'image' => img,'shared' => true},
            'vifaces' => [
                          {'name' => 'ifadm', 'vnetwork' => 'adm', 'address' => '220.0.0.11'},
-                         {'name' => 'if0', 'vnetwork' => 'vnet10-11', 'address' => '10.10.11.11', 'macaddress' => '1e:de:ad:10:11:11'},
+                         {'name' => 'if0', 'vnetwork' => 'vnet10-11', 'address' => '10.42.11.11', 'macaddress' => '1e:de:ad:10:11:11'},
                         ]
          })
    cl.vnode_create('h12',
@@ -29,7 +29,7 @@ Distem.client { |cl|
            'vfilesystem' =>{'image' => img,'shared' => true},
            'vifaces' => [
                          {'name' => 'ifadm', 'vnetwork' => 'adm', 'address' => '220.0.0.12'},
-                         {'name' => 'if0', 'vnetwork' => 'vnet10-12', 'address' => '10.10.12.12', 'macaddress' => '1e:de:ad:10:12:12'},
+                         {'name' => 'if0', 'vnetwork' => 'vnet10-12', 'address' => '10.42.12.12', 'macaddress' => '1e:de:ad:10:12:12'},
                         ]
          })
 
@@ -40,13 +40,13 @@ Distem.client { |cl|
            'vfilesystem' =>{'image' => img_p4,'shared' => true},
            'vifaces' => [
                          {'name' => 'ifadm', 'vnetwork' => 'adm', 'address' => '220.0.0.10'},
-                         {'name' => 'if11', 'vnetwork' => 'vnet10-11', 'address' => '10.10.11.10', 'macaddress' => '1e:de:ad:10:11:10'},
-                         {'name' => 'if12', 'vnetwork' => 'vnet10-12', 'address' => '10.10.12.10', 'macaddress' => '1e:de:ad:10:12:10'},
+                         {'name' => 'if11', 'vnetwork' => 'vnet10-11', 'address' => '10.42.11.10', 'macaddress' => '1e:de:ad:10:11:10'},
+                         {'name' => 'if12', 'vnetwork' => 'vnet10-12', 'address' => '10.42.12.10', 'macaddress' => '1e:de:ad:10:12:10'},
                         ]
          })
 
 
-    puts "Starting vnodes..."
+  puts "Starting vnodes..."
   cl.vnodes_start(nodes)
   puts "Waiting for vnodes to be here..."
   sleep(30)
