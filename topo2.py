@@ -45,15 +45,15 @@ import json
 G_json = {'directed': False,
           'graph': {},
           'nodes': [
-             {u'type': 'switch', 'id': 's13', u'thrift_port': 45013, "API": "http://127.0.0.1:8013"},
-             {u'type': 'switch', 'id': 's12', u'thrift_port': 45012, "API": "http://127.0.0.1:8012"},
-             {u'type': 'switch', 'id': 's11', u'thrift_port': 45011, "API": "http://127.0.0.1:8011"},
+             {u'type': 'switch', 'id': 's13', 'thrift_ip': '127.0.0.1', u'thrift_port': 45013, "API": "http://127.0.0.1:8013"},
+             {u'type': 'switch', 'id': 's12', 'thrift_ip': '127.0.0.1', u'thrift_port': 45012, "API": "http://127.0.0.1:8012"},
+             {u'type': 'switch', 'id': 's11', 'thrift_ip': '127.0.0.1', u'thrift_port': 45011, "API": "http://127.0.0.1:8011"},
              {u'ip': '192.0.2.21', u'type': 'host', 'id': 'h21'},
-             {u'type': 'switch', 'id': 's14', u'thrift_port': 45014, "API": "http://127.0.0.1:8014"},
-             {u'type': 'switch', 'id': 's22', u'thrift_port': 45022, "API": "http://127.0.0.1:8022"},
-             {u'type': 'switch', 'id': 's23', u'thrift_port': 45023, "API": "http://127.0.0.1:8023"},
-             {u'type': 'switch', 'id': 's21', u'thrift_port': 45021, "API": "http://127.0.0.1:8021"},
-             {u'type': 'switch', 'id': 's24', u'thrift_port': 45024, "API": "http://127.0.0.1:8024"},
+             {u'type': 'switch', 'id': 's14', 'thrift_ip': '127.0.0.1', u'thrift_port': 45014, "API": "http://127.0.0.1:8014"},
+             {u'type': 'switch', 'id': 's22', 'thrift_ip': '127.0.0.1', u'thrift_port': 45022, "API": "http://127.0.0.1:8022"},
+             {u'type': 'switch', 'id': 's23', 'thrift_ip': '127.0.0.1', u'thrift_port': 45023, "API": "http://127.0.0.1:8023"},
+             {u'type': 'switch', 'id': 's21', 'thrift_ip': '127.0.0.1', u'thrift_port': 45021, "API": "http://127.0.0.1:8021"},
+             {u'type': 'switch', 'id': 's24', 'thrift_ip': '127.0.0.1', u'thrift_port': 45024, "API": "http://127.0.0.1:8024"},
              {u'ip': '192.0.2.11', u'type': 'host', 'id': 'h11'},
              {'ip': '192.0.2.22', 'type': 'host', 'id': 'h22'}, 
              {u'ip': '192.0.2.12', u'type': 'host', 'id': 'h12'}],
@@ -122,10 +122,11 @@ class MyTopo(Topo):
                _configs[n]["switch_name"] = n
                _configs[n]["controller_ip"] = "127.0.0.1"
                _configs[n]["controller_port"] = 8000
+               _configs[n]["thrift_ip"] = G.node[n]['thrift_ip']
                _configs[n]["thrift_port"] = G.node[n]['thrift_port']
+               _configs[n]["API"] = G.node[n]['API']
                _configs[n]["cpu_iface"] = "cpu-veth-%s" %(n)
                _configs[n]["ports"] = list()
-
 
            if G.node[n]["type"]=="host":
                print "CREATE node " , n, G.node[n]["ip"]
@@ -156,8 +157,8 @@ class MyTopo(Topo):
            with open(_filename, 'w') as _f:
                json.dump(_configs[s], _f)
 
-        with open("config/topology_ctr.json", "w") as _f:
-           json.dump(json_graph.node_link_data(G), _f)
+#        with open("config/topology_ctr.json", "w") as _f:
+#           json.dump(json_graph.node_link_data(G), _f)
 
 def main():
     topo = MyTopo(args.behavioral_exe,

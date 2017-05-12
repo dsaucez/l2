@@ -1,4 +1,3 @@
-
 # General
 import json
 import time
@@ -19,10 +18,7 @@ from flow import Flow
 from host import Host
 
 
-with open("topology_ctr.json", "r") as topo_file:
-    G_json = json.load(topo_file)
-    G = json_graph.node_link_graph(G_json)
-
+G = nx.Graph()
 _T = nx.minimum_spanning_tree(G)
 
 # #################################  
@@ -92,16 +88,26 @@ class RESTRequestHandlerLink(tornado.web.RequestHandler):
         _s = params["src"]
         _d = params["dst"]
 
+        # add the node unknown.
+        if not G.has_node(params["name"]):
+           G.add_node(params["name"])
+
+        # update node information
+        G.node[params["name"]]["API"] = params["API"]
+        G.node[params["name"]]["thrift_port"] = params["thrift_port"]
+        G.node[params["name"]]["thrift_ip"] = params["thrift_ip"]
+
         # ignore local or links we already know
         if _s == _d or G.has_edge(_s,_d):
            self.set_status(200)
+        # add the link to the graph
         else:
            self.set_status(201)
-           print "Learned link %s - %s" % (_s, _d)
            G.add_edge(_s, _d, attr_dict={_s:params[_s], _d:params[_d]})
            # recompute the spanning tree
            global _T
            _T = nx.minimum_spanning_tree(G)
+           print "Learned link %s - %s" % (_s, _d)
         
         self.finish()
 
@@ -113,8 +119,6 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
 
     # POST /host
     def post(self):
-#        print "Learn host"
-
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
         switch = self.request.headers.get("X-switch-name")
         params = json.loads(self.request.body.decode())
@@ -173,7 +177,7 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
                   try:
                       _url = "%s/commands" % (str(G.node[_src]["API"]))
                       _cmd = "table_add mac_table set_out_port %s => %d" % (_mac, _portid)
-                      _body = {"thrift_port": G.node[_src]["thrift_port"], "commands":[_cmd]}
+                      _body = {"thrift_ip": G.node[_src]["thrift_ip"], "thrift_port": G.node[_src]["thrift_port"], "commands":[_cmd]}
                       print "\tSend %s to _url %s" % (json.dumps(_body), _url)
                       response = requests.post(_url, data = json.dumps(_body), headers={"Content-Type": "application/json"})
                   except Exception as e:

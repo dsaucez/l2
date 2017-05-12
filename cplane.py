@@ -32,8 +32,14 @@ if len(sys.argv) != 2:
 # cannonical name of the switch
 switch_name = None
 
+# thrift IP address for CLI
+thrift_ip = None
+
 # thrift port for CLI
 thrift_port = None
+
+# API
+API = None
 
 # CPU interface
 cpu_iface = None
@@ -58,6 +64,8 @@ def load_config(filename):
     global switch_name 
     global api_url
     global thrift_port
+    global thrift_ip
+    global API
     global cpu_iface
     global controller_port
     global controller_ip
@@ -71,7 +79,9 @@ def load_config(filename):
     with open(filename) as data_file:
         data = json.load(data_file)
         switch_name = data["switch_name"]
+        thrift_ip = data["thrift_ip"]
         thrift_port = data["thrift_port"]
+        API = data["API"] 
         cpu_iface = str(data["cpu_iface"])
         controller_port = str(data["controller_port"])
         controller_ip = str(data["controller_ip"])
@@ -81,15 +91,16 @@ def load_config(filename):
       
            ###################
            cmd = "table_add fib_table set_next_local %s => %d" % (port.prefix, port.index)
-           send_to_CLI(cmd, cli_port=thrift_port)
+           send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
            cmd = "table_add port_table set_src_mac %d => %s" % (port.index, port.mac)
-           send_to_CLI(cmd, cli_port=thrift_port)
+           send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
            ###################
     
            ip_dic[str(port.ip)]  = str(port.mac)
     
     print "######################################################"
     print "# switch name: ", switch_name
+    print "# thrift ip: ", thrift_ip
     print "# thrift port: ", thrift_port
     print "# cpu_iface: ", cpu_iface
     print "# ports" , [str(p) for p in ports]
@@ -215,13 +226,13 @@ def optimal(flow):
     return _resp
 
 
-def send_to_CLI(cmd, cli_port):
+def send_to_CLI(cmd, cli_ip, cli_port):
     """
     Send the command `cmd` to the CLI of the P4 switch
     """
     this_dir = os.path.dirname(os.path.realpath(__file__))
-    args = [os.path.join(this_dir, "sswitch_CLI2.sh"), str(cli_port)]
-    print cmd
+    args = [os.path.join(this_dir, "sswitch_CLI.sh"), str(cli_ip), str(cli_port)]
+    print args, cmd
     p = Popen(args, stdout=PIPE, stdin=PIPE)
     output = p.communicate(input=cmd)[0]
 #    print output
@@ -257,7 +268,7 @@ def _update_mac(ip, mac, port, controller=False):
 
     # LEARN MAC on port
     cmd = "table_add mac_table set_out_port %s => %d" % (mac, port)
-    send_to_CLI(cmd, cli_port=thrift_port)
+    send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
 
 # arp_hdr.pdst
 def _get_mac(ip):
@@ -398,10 +409,14 @@ def process_lldp(ether_hdr, port):
 
     # link parameters (see controller API /link)
     data = {
+       "name":switch_name,
        "src":chassis_tlv.locallyAssigned,
        "dst":switch_name,
        chassis_tlv.locallyAssigned: int(port_tlv.locallyAssigned),
-       switch_name:port
+       switch_name:port,
+       "API": API,
+       "thrift_ip":thrift_ip,
+       "thrift_port":thrift_port
     }
 
     # send the optimization request to the controller
@@ -536,7 +551,7 @@ def process_cpu_pkt(p):
 
        # update the switch accordingly
        for cmd in cmds:
-           send_to_CLI(cmd, cli_port=thrift_port)
+           send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
     except Exception as e:
        print e 
 
@@ -549,7 +564,7 @@ class RESTRequestHandlerCmds(tornado.web.RequestHandler):
         params = json.loads(self.request.body.decode())
         print "Execute commands: ", str(params["commands"])
         for cmd in params["commands"]:
-           r = send_to_CLI(cmd, params["thrift_port"])
+           r = send_to_CLI(cmd, cli_ip=params["thrift_ip"], cli_port=params["thrift_port"])
            results.append((cmd, r))
         self.set_status(201)
         self.finish(json.dumps({"output":results}))

@@ -80,6 +80,30 @@ class Port_Id(Packet):
                                 lambda pkt: pkt.subtype == 0x07)]
 
 
+class RESTAPI(Packet):
+    name = "REST API"
+    fields_desc = [BitEnumField("type", 0x7F, 7, TLV_DICTIONARY),
+               BitField("length", 7, 9),
+               X3BytesField("OUI", 0xDEAD01),
+               ByteField("sub-type", 0x01),
+               StrLenField("url", "yes", length_from=lambda x: x.length - 4)]
+class ThriftIP(Packet):
+    name = "Thrift IP"
+    fields_desc = [BitEnumField("type", 0x7F, 7, TLV_DICTIONARY),
+               BitField("length", 7, 9),
+               X3BytesField("OUI", 0xDEAD01),
+               ByteField("sub-type", 0x02),
+               StrLenField("ip", "yes", length_from=lambda x: x.length - 4)]
+
+class ThriftPort(Packet):
+    name = "Thrift port"
+    fields_desc = [BitEnumField("type", 0x7F, 7, TLV_DICTIONARY),
+               BitField("length", 7, 9),
+               X3BytesField("OUI", 0xDEAD01),
+               ByteField("sub-type", 0x03),
+               StrLenField("port", "yes", length_from=lambda x: x.length - 1)]
+
+
 class TTL(Packet):
     name = "Time To Live"
     fields_desc = [BitEnumField("type", 0x03, 7, TLV_DICTIONARY),
@@ -110,7 +134,7 @@ def create_lldp_packet(mac_addr, switch_name, port_id):
     ttl_tlv = TTL()
     ttl_tlv.length = 2
     ttl_tlv.seconds = 0
-
+    
     # The end 
     end_tlv = EndOfPDU()
 

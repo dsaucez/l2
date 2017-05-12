@@ -2,7 +2,6 @@
 Start the network:
 $ sudo ./cleanup2.sh && sudo ./run_demo2.sh
 
-
 Start the controller:
 $ python controller.py
 
