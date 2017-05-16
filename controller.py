@@ -2,6 +2,7 @@
 import json
 import time
 import uuid
+import random
 
 # REST API
 import tornado.httpserver
@@ -23,60 +24,76 @@ _T = nx.minimum_spanning_tree(G)
 
 # #################################  
 hosts = dict()
+flows = dict()
 PORT = 8000
 
 
 class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
-    def initialize(self, hosts):
+    def initialize(self, hosts, flows):
         self.hosts = hosts
-
-    def whatPort(self, flow, switch):
-        cmds = list()
-#        print "PATH >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", switch
-        _src = switch
-        _dst = self.hosts[flow.dstAddr].switch
-        _flow = str(flow)
-
-        # go directly to the port we learned the IP
-        if _src == _dst:
-#           print "%s == %s" % (_src, _dst)
-           cmd = "table_add flow_table set_fast_forward %s => %s %d" % (_flow, self.hosts[flow.dstAddr].mac, self.hosts[flow.dstAddr].switch_port)
-           cmds.append(cmd)
-        # make funky optimization
-        else:
-           global _T
-#################           _T = nx.minimum_spanning_tree(G) ###############################################################################################
-           _path = nx.shortest_path(_T, _src, _dst)
-           i = 0
-           _src = _path[i]
-           _neighbor = _path[i+1]
-           _portid = _T.edge[_src][_neighbor][_src]
-           _mac = self.hosts[flow.dstAddr].mac
-           cmd = "table_add flow_table set_fast_forward %s => %s %d" % (_flow, _mac, _portid)
-           cmds.append(cmd)
-
-        print "%s optimizes flow %s " % (switch, str(flow)) #cmds)
-        return {"commands":cmds}
+        self.flows = flows
 
     def post(self):
-#        print "Optimize flow"
-
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
         switch = self.request.headers.get("X-switch-name")
         params = json.loads(self.request.body.decode())
 
         # get the flow to optimize
         flow = Flow(dic=params)
-        
-        # if we know where the IP address is, we can optimze
-        if flow.dstAddr in self.hosts.keys():
-           optimal = self.whatPort(flow, switch)
-           self.set_status(200)
-           self.finish(json.dumps(optimal))
-        # otherwise, we can't
-        else:
+        _flow = str(flow)
+        if _flow in self.flows.keys():
+           print ">>>>>>>>>>> already optimal here from %s for %s" % (switch, _flow)
+           self.set_status(304)
+           self.finish()
+           return
+        self.flows[_flow] = True
+
+        # impossible to optimize if unknown destination
+        if flow.dstAddr not in self.hosts.keys():
            self.set_status(204)
            self.finish()
+           return
+
+        # from what switch to what switch?
+        _src = switch
+        _dst = self.hosts[flow.dstAddr].switch
+        _mac = self.hosts[flow.dstAddr].mac
+
+        # pick one path randomly
+        _paths = nx.all_shortest_paths(G, _src, _dst)
+        _array_paths = [p for p in  _paths]
+        _path = _array_paths[int(  random.random() * len(_array_paths)  )]
+
+	# compute the port to use on each switch on the (_src, _dst) path
+        print "Compute optimal path:"
+        _resp = {"commands":list()}
+        for i in range(0, len(_path)):
+            _src = _path[i]
+	    # For the switch connected to the host, get the port to the host
+            if i == len(_path) - 1:
+               _portid = self.hosts[flow.dstAddr].switch_port 
+	    # For switches on the path to the host, get the port to the
+	    # next-hop
+            else:
+                _neighbor = _path[i+1]
+                _portid = G.edge[_src][_neighbor][_src]
+            # Command to run on the switch to add the flow
+            _cmd = "table_add flow_table set_fast_forward %s => %d" % (_flow, _portid)
+
+	    # do not push the command to the switch that made the request in
+	    # order to update it last (to avoid loops)
+            if i == 0:
+                _resp["commands"].append(_cmd)
+            # push the MAC:PORT on the other switches on the path
+            else:
+                try:
+                    push_command(G, _src, _cmd)
+                except Exception as e:
+      	            print "Error with southbound", e
+
+        # provide the MAC:PORT to the requesting switch
+        self.set_status(200)
+        self.finish(json.dumps(_resp))
 
 ######################### LINK
 class RESTRequestHandlerLink(tornado.web.RequestHandler):
@@ -111,6 +128,11 @@ class RESTRequestHandlerLink(tornado.web.RequestHandler):
         
         self.finish()
 
+def push_command(G, node, cmd):
+    _url = "%s/commands" % (str(G.node[node]["API"]))
+    _body = {"thrift_ip": G.node[node]["thrift_ip"], "thrift_port": G.node[node]["thrift_port"], "commands":[cmd]}
+    print "\tSend %s to _url %s" % (json.dumps(_body), _url)
+    response = requests.post(_url, data = json.dumps(_body), headers={"Content-Type": "application/json"})
 
 ######################### HOST
 class RESTRequestHandlerHost(tornado.web.RequestHandler):
@@ -159,7 +181,6 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
            _first_hop = switch
            _last_hop = _host["switch"]
            global _T
-#################           _T = nx.minimum_spanning_tree(G) ####################################################################################################
            _path = nx.shortest_path(_T, _first_hop, _last_hop)
 
            # for every switch on the path, add the MAC:PORT entry
@@ -175,11 +196,8 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
               # push the MAC:PORT on the other switches on the path
               else:
                   try:
-                      _url = "%s/commands" % (str(G.node[_src]["API"]))
                       _cmd = "table_add mac_table set_out_port %s => %d" % (_mac, _portid)
-                      _body = {"thrift_ip": G.node[_src]["thrift_ip"], "thrift_port": G.node[_src]["thrift_port"], "commands":[_cmd]}
-                      print "\tSend %s to _url %s" % (json.dumps(_body), _url)
-                      response = requests.post(_url, data = json.dumps(_body), headers={"Content-Type": "application/json"})
+                      push_command(G, _src, _cmd)
                   except Exception as e:
                       print "Error with southbound", e
            self.finish(json.dumps(_host))
@@ -192,7 +210,7 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
 rest_app = tornado.web.Application([
            ("/host", RESTRequestHandlerHost, dict(hosts=hosts)),
            ("/host/(.*)", RESTRequestHandlerHost, dict(hosts=hosts)),
-           ("/optimal", RESTRequestHandlerOptimization, dict(hosts=hosts)),
+           ("/optimal", RESTRequestHandlerOptimization, dict(hosts=hosts,flows=flows)),
            ("/link", RESTRequestHandlerLink)
            ])
 rest_server = tornado.httpserver.HTTPServer(rest_app)

@@ -1,5 +1,5 @@
 # prepare CPU interface
-sh interfaces.sh
+./interfaces.sh
 # compile P4
 p4c-bmv2 ../p4src/counter.p4 --json counter.json
 # start switch

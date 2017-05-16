@@ -150,8 +150,9 @@ action set_out_port(iface) {
 }
 
 /* Set the next hop mac and interface directly */
-action set_fast_forward(nh_mac, iface) {
-   set_dst_mac(nh_mac);                                // impose destination mac 
+action set_fast_forward(iface) {
+//action set_fast_forward(nh_mac, iface) {
+//   set_dst_mac(nh_mac);                                // impose destination mac 
    modify_field(standard_metadata.egress_spec, iface); // interface to reach the next-hop
    modify_field(super_meta.fast, 1);
 }
@@ -162,21 +163,12 @@ control ingress {
     if (super_meta.fast != 1){
        // L2 switch
        apply(mac_table);        // figure out the next port to forward the packet to
-/*
-         // Router
-         // DEPRECATED
-         apply(fib_table);      // figure out the next-hop and interface to forward the packet to
-         if (super_meta.local == 0) {
-             apply(arp_table);      // set the MAC address of the next-hop (dest)
-         }
-*/
     }
 }
 
 control egress {
     if (standard_metadata.instance_type == 0){
-// DEPRECATED         apply(ttl_table);
-         apply(port_table);    // set the MAC address of the network port (src)
+// DEPRECATED         apply(port_table);    // set the MAC address of the network port (src)
          apply(no_arp_table);  // do not forward ARP's
     }
     else {

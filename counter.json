@@ -327,8 +327,46 @@
             "init_state": "start",
             "parse_states": [
                 {
-                    "name": "parse_ipv4",
+                    "name": "parse_cpu_header",
                     "id": 0,
+                    "parser_ops": [
+                        {
+                            "op": "extract",
+                            "parameters": [
+                                {
+                                    "type": "regular",
+                                    "value": "cpu_header"
+                                }
+                            ]
+                        }
+                    ],
+                    "transition_key": [
+                        {
+                            "type": "field",
+                            "value": [
+                                "cpu_header",
+                                "etherType"
+                            ]
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "type": "hexstr",
+                            "value": "0x0800",
+                            "mask": null,
+                            "next_state": "parse_ipv4"
+                        },
+                        {
+                            "type": "default",
+                            "value": null,
+                            "mask": null,
+                            "next_state": null
+                        }
+                    ]
+                },
+                {
+                    "name": "parse_ipv4",
+                    "id": 1,
                     "parser_ops": [
                         {
                             "op": "extract",
@@ -429,7 +467,7 @@
                 },
                 {
                     "name": "start",
-                    "id": 1,
+                    "id": 2,
                     "parser_ops": [
                         {
                             "op": "set",
@@ -462,8 +500,78 @@
                     ]
                 },
                 {
+                    "name": "parse_udp",
+                    "id": 3,
+                    "parser_ops": [
+                        {
+                            "op": "extract",
+                            "parameters": [
+                                {
+                                    "type": "regular",
+                                    "value": "udp"
+                                }
+                            ]
+                        },
+                        {
+                            "op": "set",
+                            "parameters": [
+                                {
+                                    "type": "field",
+                                    "value": [
+                                        "super_meta",
+                                        "srcPort"
+                                    ]
+                                },
+                                {
+                                    "type": "field",
+                                    "value": [
+                                        "udp",
+                                        "srcPort"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "op": "set",
+                            "parameters": [
+                                {
+                                    "type": "field",
+                                    "value": [
+                                        "super_meta",
+                                        "dstPort"
+                                    ]
+                                },
+                                {
+                                    "type": "field",
+                                    "value": [
+                                        "udp",
+                                        "dstPort"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "transition_key": [
+                        {
+                            "type": "field",
+                            "value": [
+                                "udp",
+                                "dstPort"
+                            ]
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "type": "default",
+                            "value": null,
+                            "mask": null,
+                            "next_state": null
+                        }
+                    ]
+                },
+                {
                     "name": "parse_tcp",
-                    "id": 2,
+                    "id": 4,
                     "parser_ops": [
                         {
                             "op": "extract",
@@ -533,7 +641,7 @@
                 },
                 {
                     "name": "parse_ethernet",
-                    "id": 3,
+                    "id": 5,
                     "parser_ops": [
                         {
                             "op": "extract",
@@ -580,114 +688,6 @@
                             "mask": null,
                             "next_state": "parse_cpu_header"
                         },
-                        {
-                            "type": "hexstr",
-                            "value": "0x0800",
-                            "mask": null,
-                            "next_state": "parse_ipv4"
-                        },
-                        {
-                            "type": "default",
-                            "value": null,
-                            "mask": null,
-                            "next_state": null
-                        }
-                    ]
-                },
-                {
-                    "name": "parse_udp",
-                    "id": 4,
-                    "parser_ops": [
-                        {
-                            "op": "extract",
-                            "parameters": [
-                                {
-                                    "type": "regular",
-                                    "value": "udp"
-                                }
-                            ]
-                        },
-                        {
-                            "op": "set",
-                            "parameters": [
-                                {
-                                    "type": "field",
-                                    "value": [
-                                        "super_meta",
-                                        "srcPort"
-                                    ]
-                                },
-                                {
-                                    "type": "field",
-                                    "value": [
-                                        "udp",
-                                        "srcPort"
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "op": "set",
-                            "parameters": [
-                                {
-                                    "type": "field",
-                                    "value": [
-                                        "super_meta",
-                                        "dstPort"
-                                    ]
-                                },
-                                {
-                                    "type": "field",
-                                    "value": [
-                                        "udp",
-                                        "dstPort"
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    "transition_key": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "udp",
-                                "dstPort"
-                            ]
-                        }
-                    ],
-                    "transitions": [
-                        {
-                            "type": "default",
-                            "value": null,
-                            "mask": null,
-                            "next_state": null
-                        }
-                    ]
-                },
-                {
-                    "name": "parse_cpu_header",
-                    "id": 5,
-                    "parser_ops": [
-                        {
-                            "op": "extract",
-                            "parameters": [
-                                {
-                                    "type": "regular",
-                                    "value": "cpu_header"
-                                }
-                            ]
-                        }
-                    ],
-                    "transition_key": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "cpu_header",
-                                "etherType"
-                            ]
-                        }
-                    ],
-                    "transitions": [
                         {
                             "type": "hexstr",
                             "value": "0x0800",
@@ -769,12 +769,18 @@
             ]
         },
         {
-            "name": "set_src_mac",
+            "name": "_nop",
             "id": 2,
+            "runtime_data": [],
+            "primitives": []
+        },
+        {
+            "name": "set_out_port",
+            "id": 3,
             "runtime_data": [
                 {
-                    "name": "smac",
-                    "bitwidth": 48
+                    "name": "iface",
+                    "bitwidth": 9
                 }
             ],
             "primitives": [
@@ -784,8 +790,8 @@
                         {
                             "type": "field",
                             "value": [
-                                "ethernet",
-                                "srcAddr"
+                                "standard_metadata",
+                                "egress_spec"
                             ]
                         },
                         {
@@ -797,8 +803,52 @@
             ]
         },
         {
+            "name": "set_fast_forward",
+            "id": 4,
+            "runtime_data": [
+                {
+                    "name": "iface",
+                    "bitwidth": 9
+                }
+            ],
+            "primitives": [
+                {
+                    "op": "modify_field",
+                    "parameters": [
+                        {
+                            "type": "field",
+                            "value": [
+                                "standard_metadata",
+                                "egress_spec"
+                            ]
+                        },
+                        {
+                            "type": "runtime_data",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "op": "modify_field",
+                    "parameters": [
+                        {
+                            "type": "field",
+                            "value": [
+                                "super_meta",
+                                "fast"
+                            ]
+                        },
+                        {
+                            "type": "hexstr",
+                            "value": "0x1"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "name": "do_cpu_encap",
-            "id": 3,
+            "id": 5,
             "runtime_data": [],
             "primitives": [
                 {
@@ -881,104 +931,6 @@
                     ]
                 }
             ]
-        },
-        {
-            "name": "set_out_port",
-            "id": 4,
-            "runtime_data": [
-                {
-                    "name": "iface",
-                    "bitwidth": 9
-                }
-            ],
-            "primitives": [
-                {
-                    "op": "modify_field",
-                    "parameters": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "standard_metadata",
-                                "egress_spec"
-                            ]
-                        },
-                        {
-                            "type": "runtime_data",
-                            "value": 0
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "set_fast_forward",
-            "id": 5,
-            "runtime_data": [
-                {
-                    "name": "nh_mac",
-                    "bitwidth": 48
-                },
-                {
-                    "name": "iface",
-                    "bitwidth": 9
-                }
-            ],
-            "primitives": [
-                {
-                    "op": "modify_field",
-                    "parameters": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "ethernet",
-                                "dstAddr"
-                            ]
-                        },
-                        {
-                            "type": "runtime_data",
-                            "value": 0
-                        }
-                    ]
-                },
-                {
-                    "op": "modify_field",
-                    "parameters": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "standard_metadata",
-                                "egress_spec"
-                            ]
-                        },
-                        {
-                            "type": "runtime_data",
-                            "value": 1
-                        }
-                    ]
-                },
-                {
-                    "op": "modify_field",
-                    "parameters": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "super_meta",
-                                "fast"
-                            ]
-                        },
-                        {
-                            "type": "hexstr",
-                            "value": "0x1"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "_nop",
-            "id": 6,
-            "runtime_data": [],
-            "primitives": []
         }
     ],
     "pipelines": [
@@ -1115,37 +1067,8 @@
             "init_table": "_condition_1",
             "tables": [
                 {
-                    "name": "port_table",
-                    "id": 2,
-                    "match_type": "exact",
-                    "type": "simple",
-                    "max_size": 256,
-                    "with_counters": true,
-                    "direct_meters": null,
-                    "support_timeout": false,
-                    "key": [
-                        {
-                            "match_type": "exact",
-                            "target": [
-                                "standard_metadata",
-                                "egress_port"
-                            ],
-                            "mask": null
-                        }
-                    ],
-                    "actions": [
-                        "set_src_mac",
-                        "_drop"
-                    ],
-                    "next_tables": {
-                        "set_src_mac": "no_arp_table",
-                        "_drop": "no_arp_table"
-                    },
-                    "base_default_next": "no_arp_table"
-                },
-                {
                     "name": "no_arp_table",
-                    "id": 3,
+                    "id": 2,
                     "match_type": "exact",
                     "type": "simple",
                     "max_size": 2,
@@ -1174,7 +1097,7 @@
                 },
                 {
                     "name": "redirect",
-                    "id": 4,
+                    "id": 3,
                     "match_type": "exact",
                     "type": "simple",
                     "max_size": 16,
@@ -1226,7 +1149,7 @@
                             }
                         }
                     },
-                    "true_next": "port_table",
+                    "true_next": "no_arp_table",
                     "false_next": "redirect"
                 }
             ]
@@ -1496,15 +1419,8 @@
             "size": null
         },
         {
-            "name": "port_table_stats",
-            "id": 1,
-            "is_direct": true,
-            "binding": "port_table",
-            "size": 256
-        },
-        {
             "name": "flow_table_stats",
-            "id": 2,
+            "id": 1,
             "is_direct": true,
             "binding": "flow_table",
             "size": 65535

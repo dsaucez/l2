@@ -89,10 +89,11 @@ class MyTopo(Topo):
             self._ports[sw] = pid
         return pid
 
-    def _make_port(self, s, port):
+    def _make_port(self, s, port, connected_to_host):
               _port = dict()
               _port["index"] = port
               _port["name"] = "%s-eth%d" % (s, port)
+              _port["edge"] = connected_to_host
 
               self._randomip = self._randomip + 1
               _mac = "1e:de:ad:de:ad:%x" % self._randomip
@@ -144,9 +145,9 @@ class MyTopo(Topo):
            dport = self.port_id(d)
            print "CONNECT %s-eth%d -> %s-eth%d" % (s, sport, d, dport)
            if G.node[s]["type"] == "switch":
-               self._make_port(s, sport)
+               self._make_port(s, sport, G.node[d]["type"] == "host")
            if G.node[d]["type"] == "switch":
-               self._make_port(d, dport)
+               self._make_port(d, dport, G.node[s]["type"] == "host")
            G.edge[s][d][s] = sport
            G.edge[s][d][d] = dport
            print "\t\t ", G.edge[s][d]

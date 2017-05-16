@@ -86,7 +86,7 @@ def load_config(filename):
         controller_port = str(data["controller_port"])
         controller_ip = str(data["controller_ip"])
         for d in data["ports"]:
-           port = Port(index = d["index"], name = d["name"], mac = d["mac"], ip = d["ip"], prefix= d["prefix"])
+           port = Port(index = d["index"], name = d["name"], mac = d["mac"], ip = d["ip"], prefix = d["prefix"], edge = d["edge"])
            ports[port.index] = port
       
            ###################
@@ -191,7 +191,7 @@ def decision_temporal(flow):
     return bool(a)
  
 def install(flow):
-    return False
+    return True
     """
     Returns wether or not the `flow` must be optimally installed
 
@@ -215,7 +215,6 @@ def optimal(flow):
     # send the optimization request to the controller
     ctrl = "%s:%s" % (controller_ip, controller_port)
     response = requests.post("http://%s/optimal" % (ctrl), data = json.dumps(flow.attributes()), headers={"Content-Type": "application/json","X-switch-name":switch_name})
-    print response
 
     # ok, the controller returns us something
     if response.status_code == 200:
@@ -544,12 +543,24 @@ def process_cpu_pkt(ether_hdr):
     flow = Flow(srcAddr, dstAddr, protocol, srcPort, dstPort)
     key = str(flow)
 
-    if key in flows:
-       print ">>>>>>>>>>> Flow %s has already been requested!" % (key)
-       return 
-    flows[key] = True
 
-    # install a flow table entry in the sitch
+    # Check if we have to do something
+    # process only if coming from an edge port
+    if not ports[if_index].edge:
+       print "Optimization of flow %s ignored as not received on edge port " % (switch_name)
+       return
+    # do not process flows if a request for processing has been sent recently
+    now = time.time()
+    if key in flows:
+       if flows[key] > (now - 5.): # no more than one request every 5 sec for the flow
+           print "Flow %s has been requested recently" % (key)
+           return 
+       else:
+           print "                                We know the flow ", (key)
+    flows[key] = now
+
+
+    # install a flow table entry in the switch
     try:
        cmds = list()
        # if it can installed, optimize it
@@ -562,7 +573,7 @@ def process_cpu_pkt(ether_hdr):
          cmd = "table_add flow_table _nop %s =>" %(flow)
          cmds.append(cmd)
 
-       # update the switch accordingly
+       # exectude all the commands
        for cmd in cmds:
            send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
     except Exception as e:
