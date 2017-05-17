@@ -13,7 +13,6 @@ class Paths:
         :param G: topology graph 
         :type G: networkx.classes.graph.Graph
         """
-        print type(G)
         self.G = G
         self.reset()
 

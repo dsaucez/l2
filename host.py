@@ -23,5 +23,5 @@ class Host:
             "switch":self.switch,
             "switch_port":self.switch_port,
             "uuid": str(self.uuid),
-            "local_port": -1
+            "forward_port": -1
             }

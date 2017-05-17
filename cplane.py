@@ -260,6 +260,10 @@ def _update_mac(ip, mac, port, controller=False):
 
     ip_dic[ip] = mac    # remember the IP:MAC
 
+    # LEARN MAC on port
+    cmd = "table_add mac_table set_out_port %s => %d" % (mac, port)
+    send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
+
     # inform the controller about this new information
     if controller:
         _host = {
@@ -270,10 +274,6 @@ def _update_mac(ip, mac, port, controller=False):
         }
         ctrl = "%s:%s" % (controller_ip, controller_port)
         r = requests.post("http://%s/host" % (ctrl), data = json.dumps(_host), headers={"Content-Type": "application/json", "X-switch-name":switch_name})
-
-    # LEARN MAC on port
-    cmd = "table_add mac_table set_out_port %s => %d" % (mac, port)
-    send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
 
 # arp_hdr.pdst
 def _get_mac(ip):
@@ -304,7 +304,7 @@ def _get_mac(ip):
         if response.status_code == 200:
             _resp = json.loads(response.text)
             _hwsrc = str(_resp["mac"])         # get the MAC
-            _port = _resp["local_port"]        # get the port to use localy
+            _port = _resp["forward_port"]      # get the port to use localy
             _update_mac(ip, _hwsrc, _port, controller=False) # remember the IP:MAC
         # the controller doesn't know the host
         else:
@@ -551,7 +551,7 @@ def process_cpu_pkt(ether_hdr):
        return
     # do not process flows if a request for processing has been sent recently
     now = time.time()
-    if key in flows:
+    if key in flows.keys():
        if flows[key] > (now - 5.): # no more than one request every 5 sec for the flow
            print "Flow %s has been requested recently" % (key)
            return 
