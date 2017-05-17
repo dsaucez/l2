@@ -17,10 +17,13 @@ from networkx.readwrite import json_graph
 # Project
 from flow import Flow
 from host import Host
-
-
+from path import Path
+from paths import Paths
+# =====
 G = nx.Graph()
 _T = nx.minimum_spanning_tree(G)
+# #######
+paths = Paths(G)
 
 # #################################  
 hosts = dict()
@@ -29,9 +32,10 @@ PORT = 8000
 
 
 class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
-    def initialize(self, hosts, flows):
+    def initialize(self, hosts, flows, paths):
         self.hosts = hosts
         self.flows = flows
+        self.paths = paths
 
     def post(self):
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
@@ -59,10 +63,8 @@ class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
         _dst = self.hosts[flow.dstAddr].switch
         _mac = self.hosts[flow.dstAddr].mac
 
-        # pick one path randomly
-        _paths = nx.all_shortest_paths(G, _src, _dst)
-        _array_paths = [p for p in  _paths]
-        _path = _array_paths[int(  random.random() * len(_array_paths)  )]
+        # pick one path 
+        _path = self.paths.onePath(_src, _dst)
 
 	# compute the port to use on each switch on the (_src, _dst) path
         print "Compute optimal path:"
@@ -97,6 +99,9 @@ class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
 
 ######################### LINK
 class RESTRequestHandlerLink(tornado.web.RequestHandler):
+    def initialize(self, paths):
+        self.paths = paths
+
     def post(self):
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
         switch = self.request.headers.get("X-switch-name")
@@ -108,6 +113,7 @@ class RESTRequestHandlerLink(tornado.web.RequestHandler):
         # add the node unknown.
         if not G.has_node(params["name"]):
            G.add_node(params["name"])
+           self.paths.reset()
 
         # update node information
         G.node[params["name"]]["API"] = params["API"]
@@ -121,6 +127,7 @@ class RESTRequestHandlerLink(tornado.web.RequestHandler):
         else:
            self.set_status(201)
            G.add_edge(_s, _d, attr_dict={_s:params[_s], _d:params[_d]})
+           self.paths.reset()
            # recompute the spanning tree
            global _T
            _T = nx.minimum_spanning_tree(G)
@@ -210,8 +217,8 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
 rest_app = tornado.web.Application([
            ("/host", RESTRequestHandlerHost, dict(hosts=hosts)),
            ("/host/(.*)", RESTRequestHandlerHost, dict(hosts=hosts)),
-           ("/optimal", RESTRequestHandlerOptimization, dict(hosts=hosts,flows=flows)),
-           ("/link", RESTRequestHandlerLink)
+           ("/optimal", RESTRequestHandlerOptimization, dict(hosts=hosts,flows=flows,paths=paths)),
+           ("/link", RESTRequestHandlerLink, dict(paths=paths))
            ])
 rest_server = tornado.httpserver.HTTPServer(rest_app)
 rest_server.listen(PORT)
