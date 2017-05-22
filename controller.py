@@ -18,21 +18,44 @@ from networkx.readwrite import json_graph
 from flow import Flow
 from host import Host
 from topology import Topology
+import command
 
-# =====
-topology = Topology()
-
-# #################################  
-hosts = dict()
-flows = dict()
+# Constants
 PORT = 8000
 
+# For class abstraction
+import abc
 
 class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
-    def initialize(self, hosts, flows, topology):
-        self.hosts = hosts
-        self.flows = flows
+    __metaclass__  = abc.ABCMeta
+
+    def initialize(self, topology):
         self.topology = topology
+
+    def pushCommand(self, node, cmd):
+        """
+        :param node: node where to push the command
+        :type node: string
+
+        :param cmd: command to be executed on the node
+        :type cmd: string
+        """
+        push_command(self.topology.G, node, cmd)
+
+    @abc.abstractmethod
+    def _optimal(self, switch, flow):
+        """
+	This method optimizes the routing of `flow` in the network upon
+        packet_in reception from `switch`
+
+        :param switch: switch name
+        :type switch: string
+
+        :param flow: Flow information
+        :type flow: Flow
+
+        :return: the list of commands to be executed
+        """
 
     def post(self):
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
@@ -41,58 +64,19 @@ class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
 
         # get the flow to optimize
         flow = Flow(dic=params)
-        _flow = str(flow)
-        if _flow in self.flows.keys():
-           print ">>>>>>>>>>> already optimal here from %s for %s" % (switch, _flow)
-           self.set_status(304)
-           self.finish()
-           return
-        self.flows[_flow] = True
 
-        # impossible to optimize if unknown destination
-        if flow.dstAddr not in self.hosts.keys():
-           self.set_status(204)
-           self.finish()
-           return
-
-        # from what switch to what switch?
-        _src = switch
-        _dst = self.hosts[flow.dstAddr].switch
-        _mac = self.hosts[flow.dstAddr].mac
-
-        # pick one path 
-        _path = self.topology.paths.onePath(_src, _dst)
-
-	# compute the port to use on each switch on the (_src, _dst) path
-        print "Compute optimal path:"
-        _resp = {"commands":list()}
-        for i in range(0, len(_path)):
-            _src = _path[i]
-	    # For the switch connected to the host, get the port to the host
-            if i == len(_path) - 1:
-               _portid = self.hosts[flow.dstAddr].switch_port 
-	    # For switches on the path to the host, get the port to the
-	    # next-hop
-            else:
-                _neighbor = _path[i+1]
-                _portid = self.topology.G.edge[_src][_neighbor][_src]
-            # Command to run on the switch to add the flow
-            _cmd = "table_add flow_table set_fast_forward %s => %d" % (_flow, _portid)
-
-	    # do not push the command to the switch that made the request in
-	    # order to update it last (to avoid loops)
-            if i == 0:
-                _resp["commands"].append(_cmd)
-            # push the MAC:PORT on the other switches on the path
-            else:
-                try:
-                    push_command(self.topology.G, _src, _cmd)
-                except Exception as e:
-      	            print "Error with southbound", e
+        # call the optimization
+        try:
+            _resp = self._optimal(switch, flow)
+        except Exception as e:
+            self.set_status(304)
+            self.finish()
+            return
 
         # provide the MAC:PORT to the requesting switch
         self.set_status(200)
         self.finish(json.dumps(_resp))
+
 
 ######################### LINK
 class RESTRequestHandlerLink(tornado.web.RequestHandler):
@@ -137,8 +121,7 @@ def push_command(G, node, cmd):
 
 ######################### HOST
 class RESTRequestHandlerHost(tornado.web.RequestHandler):
-    def initialize(self, hosts, topology):
-        self.hosts = hosts
+    def initialize(self, topology):
         self.topology = topology
 
     # POST /host
@@ -150,15 +133,15 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
 
         host = None
         # host already known
-        if params["ip"] in self.hosts.keys():
+        if params["ip"] in self.topology.hosts.keys():
            self.set_status(200)
-           host = self.hosts[params["ip"]]
+           host = self.topology.hosts[params["ip"]]
            host.update(mac = params["mac"], switch = params["switch"], switch_port = params["switch_port"])
         # host just discovered
 	else:
            self.set_status(201)
            host = Host(ip = params["ip"], mac = params["mac"], switch = params["switch"], switch_port = params["switch_port"])
-           self.hosts[params["ip"]] = host
+           self.topology.hosts[params["ip"]] = host
 
         # return the uuid for later use
         result = {"uuid":str(host.uuid)}
@@ -170,9 +153,9 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
         switch = self.request.headers.get("X-switch-name")
 
         # if the host is known, return its informations
-        if ip in self.hosts.keys():
+        if ip in self.topology.hosts.keys():
            self.set_status(200)
-           host = self.hosts[ip]
+           host = self.topology.hosts[ip]
            _host = host.attributes()
            _mac = _host["mac"]
 
@@ -197,7 +180,7 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
               # push the MAC:PORT on the other switches on the path
               else:
                   try:
-                      _cmd = "table_add mac_table set_out_port %s => %d" % (_mac, _portid)
+                      _cmd = command.macPort(_mac, _portid)
                       push_command(self.topology.T, _src, _cmd)
                   except Exception as e:
                       print "Error with southbound", e
@@ -207,13 +190,20 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
            self.set_status(204)
            self.finish()
 
-# launch server
-rest_app = tornado.web.Application([
-           ("/host", RESTRequestHandlerHost, dict(hosts=hosts,topology=topology)),
-           ("/host/(.*)", RESTRequestHandlerHost, dict(hosts=hosts,topology=topology)),
-           ("/optimal", RESTRequestHandlerOptimization, dict(hosts=hosts,flows=flows,topology=topology)),
-           ("/link", RESTRequestHandlerLink, dict(topology=topology))
-           ])
-rest_server = tornado.httpserver.HTTPServer(rest_app)
-rest_server.listen(PORT)
-tornado.ioloop.IOLoop.current().start()
+def main(XXX):
+    # Topology state
+    topology = Topology()
+
+    # launch server
+    rest_app = tornado.web.Application([
+               ("/host", RESTRequestHandlerHost, dict(topology=topology)),
+               ("/host/(.*)", RESTRequestHandlerHost, dict(topology=topology)),
+               ("/optimal", XXX, dict(topology=topology)),
+               ("/link", RESTRequestHandlerLink, dict(topology=topology))
+               ])
+    rest_server = tornado.httpserver.HTTPServer(rest_app)
+    rest_server.listen(PORT)
+    tornado.ioloop.IOLoop.current().start()
+
+if __name__ == '__main__':
+    main(RESTRequestHandlerOptimization)

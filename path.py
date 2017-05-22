@@ -20,4 +20,3 @@ class Path:
        """
        self.i = (self.i + 1) % len(self.paths)
        return self.paths[self.i]
-

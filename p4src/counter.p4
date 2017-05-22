@@ -151,8 +151,6 @@ action set_out_port(iface) {
 
 /* Set the next hop mac and interface directly */
 action set_fast_forward(iface) {
-//action set_fast_forward(nh_mac, iface) {
-//   set_dst_mac(nh_mac);                                // impose destination mac 
    modify_field(standard_metadata.egress_spec, iface); // interface to reach the next-hop
    modify_field(super_meta.fast, 1);
 }
@@ -168,7 +166,6 @@ control ingress {
 
 control egress {
     if (standard_metadata.instance_type == 0){
-// DEPRECATED         apply(port_table);    // set the MAC address of the network port (src)
          apply(no_arp_table);  // do not forward ARP's
     }
     else {

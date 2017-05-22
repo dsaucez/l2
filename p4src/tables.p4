@@ -15,17 +15,6 @@ limitations under the License.
 */
 
 // == Tables ====================================
-table ttl_table {
-   reads {
-       ipv4.ttl : exact;
-   }
-   actions {
-       _nop;
-       _drop;
-   }
-   size : 1;
-}
-
 /* Associate an IP prefix to a (next-hop, interface) pair */
 table fib_table {
    reads {
@@ -44,23 +33,6 @@ counter fib_table_stats {
     direct: fib_table;
 }
 
-/* Associate an IP to a MAC address */
-table arp_table {
-   reads {
-      super_meta.nh : exact;
-   }
-   actions {
-      set_dst_mac;
-      _drop;
-      _nop;
-   }
-   size : 65535;
-}
-counter arp_table_stats {
-    type : bytes;
-    direct: arp_table;
-}
-
 table mac_table {
    reads {
       ethernet.dstAddr : exact;
@@ -73,22 +45,6 @@ table mac_table {
 counter mac_table_stats {
     type : bytes;
     direct : mac_table;
-}
-
-/* Define the source MAC address to use for forwarding */
-table port_table {
-   reads {
-      standard_metadata.egress_port : exact;
-   }
-   actions {
-      set_src_mac;
-      _drop;
-   }
-   size : 256;
-}
-counter port_table_stats {
-    type : bytes;
-    direct: port_table;
 }
 
 table flow_table {

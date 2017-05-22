@@ -21,6 +21,7 @@ from flow import Flow
 from port import Port
 import lldp
 import cpu
+import command
 
 # == config ====================
 
@@ -89,13 +90,6 @@ def load_config(filename):
            port = Port(index = d["index"], name = d["name"], mac = d["mac"], ip = d["ip"], prefix = d["prefix"], edge = d["edge"])
            ports[port.index] = port
       
-           ###################
-           cmd = "table_add fib_table set_next_local %s => %d" % (port.prefix, port.index)
-           send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
-           cmd = "table_add port_table set_src_mac %d => %s" % (port.index, port.mac)
-           send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
-           ###################
-    
            ip_dic[str(port.ip)]  = str(port.mac)
     
     print "######################################################"
@@ -261,7 +255,7 @@ def _update_mac(ip, mac, port, controller=False):
     ip_dic[ip] = mac    # remember the IP:MAC
 
     # LEARN MAC on port
-    cmd = "table_add mac_table set_out_port %s => %d" % (mac, port)
+    cmd = command.macPort(mac, port)
     send_to_CLI(cmd, cli_ip=thrift_ip, cli_port=thrift_port)
 
     # inform the controller about this new information
@@ -570,7 +564,7 @@ def process_cpu_pkt(ether_hdr):
          cmds = opt["commands"]
        # if it cannot be installed, follow the default path
        else:
-         cmd = "table_add flow_table _nop %s =>" %(flow)
+         cmd = command.flowIgnore(flow)
          cmds.append(cmd)
 
        # exectude all the commands
@@ -629,10 +623,10 @@ if __name__ == '__main__':
     load_config(sys.argv[1])
  
     # Scapy bindings
-    bind_layers(Ether, cpu.CPUHeader, type=0xDEAD )
-    bind_layers(cpu.CPUHeader, ARP, etherType=0x0806 )
-    bind_layers(cpu.CPUHeader, lldp.Chassis_Id, etherType=0x88cc )
-    bind_layers(cpu.CPUHeader, IP, etherType=0x0800 )
+    bind_layers(Ether, cpu.CPUHeader, type=0xDEAD)
+    bind_layers(cpu.CPUHeader, ARP, etherType=0x0806)
+    bind_layers(cpu.CPUHeader, lldp.Chassis_Id, etherType=0x88cc)
+    bind_layers(cpu.CPUHeader, IP, etherType=0x0800)
     bind_layers(lldp.Chassis_Id, lldp.Port_Id)
     bind_layers(lldp.Port_Id, lldp.TTL)
 
