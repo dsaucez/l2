@@ -36,27 +36,27 @@ any request issued by the switch.
 that triggers this latter to send back a response with the forwarding
 information.
 
-The main advantage with the `push` mechanism is that no delay is added because
+The main advantage with the _push_ mechanism is that no delay is added because
 of waiting for the decision made by the controller. The main drawback is that
 it is not possible to implement fine grain policies.
 
-On the contrary, the `pull` options allows one to implement arbitrarily precise
+On the contrary, the _pull_ options allows one to implement arbitrarily precise
 policies (potentially a different decision for every packet) but it comes at
 the cost of addition delay and potentially high load on the controller.
 
-In practice, it is usually possible to combine the `push` and the `pull`
+In practice, it is usually possible to combine the _push_ and the _pull_
 mechanism to take the most of each technique. In the remaining of this course,
-we will call it `pull-push`.
+we will call it _pull-push_.
 
 #### Push
 
-We will implement `push` as follows: everytime the controller detects a change
+We will implement _push_ as follows: everytime the controller detects a change
 in the topology, it will recompute the routes and update the switches via their
 REST API to reflect the new routes in their forwarding table.
 
 #### Pull
 
-We will implement `pull` as follows: when a switch receives a packets that does
+We will implement _pull_ as follows: when a switch receives a packets that does
 not match any entry of its forwarding table, it triggers a request to the
 controller via its REST API to indicate that it just experienced a miss. The
 controller will then decide on the fly the routes for the packet and reply to
@@ -64,12 +64,12 @@ the switch with the forwarding action to perform.
 
 #### Pull-push
 
-We will implement `pull-push` as follows: when an ingress switch receives a
+We will implement _pull-push_ as follows: when an ingress switch receives a
 packets that does not match any entry of its forwarding table, it triggers a
 request to the controller via its REST API to indicate that it just experienced
 a miss. The controller will then decide on the fly the routes for the packet
 and reply to the switch with the forwarding action to perform. If multiple
-switches are on the path to the destination, the controller will `push` the
+switches are on the path to the destination, the controller will _push_ the
 forwarding information to the subsequent switches on the path.
 
 ## Routing decisions
