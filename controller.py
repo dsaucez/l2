@@ -18,7 +18,6 @@ from networkx.readwrite import json_graph
 from flow import Flow
 from host import Host
 from topology import Topology
-from myJson import json_loads
 import command
 
 # Constants
@@ -61,7 +60,7 @@ class RESTRequestHandlerRouting(tornado.web.RequestHandler):
     def post(self):
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
         switch = self.request.headers.get("X-switch-name")
-        params = json_loads(self.request.body.decode())
+        params = json.loads(self.request.body.decode())
 
         # get the flow to optimize
         flow = Flow(dic=params)
@@ -87,7 +86,7 @@ class RESTRequestHandlerLink(tornado.web.RequestHandler):
     def post(self):
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
         switch = self.request.headers.get("X-switch-name")
-        params = json_loads(self.request.body.decode())
+        params = json.loads(self.request.body.decode())
 
         _s = params["src"]
         _d = params["dst"]
@@ -129,7 +128,7 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
     def post(self):
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
         switch = self.request.headers.get("X-switch-name")
-        params = json_loads(self.request.body.decode())
+        params = json.loads(self.request.body.decode())
         print "Discovered %s from %s with %s" % (params["ip"], switch, params["mac"])
 
         host = None

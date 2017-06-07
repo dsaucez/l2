@@ -105,14 +105,14 @@ class ThriftPort(Packet):
 
 
 class TTL(Packet):
-    name = "Time To Live"
+    name = "TimeToLive"
     fields_desc = [BitEnumField("type", 0x03, 7, TLV_DICTIONARY),
                BitField("length", 0x02, 9),
                ShortField("seconds", 0)]
 
 
 class EndOfPDU(Packet):
-    name = "End of LLDPDU"
+    name = "EndofLLDPDU"
     fields_desc = [BitEnumField("type", 0x00, 7, TLV_DICTIONARY),
                BitField("length", 0x00, 9)]
 

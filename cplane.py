@@ -19,7 +19,6 @@ import requests
 # Project
 from flow import Flow
 from port import Port
-from myJson import json_loads,json_load
 import lldp
 import cpu
 import command
@@ -79,7 +78,7 @@ def load_config(filename):
     """
     # load configuration
     with open(filename) as data_file:
-        data = json_load(data_file)
+        data = json.load(data_file)
         switch_name = data["switch_name"]
         thrift_ip = data["thrift_ip"]
         thrift_port = data["thrift_port"]
@@ -213,7 +212,7 @@ def optimal(flow):
 
     # ok, the controller returns us something
     if response.status_code == 200:
-       _resp = json_loads(response.text)
+       _resp = json.loads(response.text)
     else:
        raise Exception("Could not optimize %s" % flow)
     
@@ -297,7 +296,7 @@ def _get_mac(ip):
 
         # ok, the controller returns us something
         if response.status_code == 200:
-            _resp = json_loads(response.text)
+            _resp = json.loads(response.text)
             _hwsrc = str(_resp["mac"])         # get the MAC
             _port = _resp["forward_port"]      # get the port to use localy
             _update_mac(ip, _hwsrc, _port, controller=False) # remember the IP:MAC
@@ -403,8 +402,11 @@ def process_lldp(ether_hdr, port):
     """
 
     # extract LLDP header
-    chassis_tlv = ether_hdr['Chassis ID'] 
-    port_tlv = ether_hdr['Port ID'] 
+#    chassis_tlv = ether_hdr['Chassis ID'] 
+#    port_tlv = ether_hdr['Port ID'] 
+    lldp_str = ether_hdr
+    chassis_tlv = lldp.Chassis_Id(lldp_str)
+    port_tlv = lldp.Port_Id(lldp_str[(chassis_tlv.length+2):])
     print "learned %s:%d on port %d " % (chassis_tlv.locallyAssigned, int(port_tlv.locallyAssigned), port)
 
     # link parameters (see controller API /link)
@@ -478,11 +480,14 @@ def process_cpu_pkt(ether_hdr):
     # LLDP
     elif ether_type == 0x88cc:
        try:
-          process_lldp(ether_hdr, if_index)
+          p_str = str(ether_hdr)
+          p_str2 = p_str[:12] + p_str[24:26] + p_str[26:]
+          process_lldp(p_str2[14:], if_index)
+#          process_lldp(ether_hdr, if_index)
           print "LLDP"
           return
        except Exception as e:
-          print "Error extracting LLDP"
+          print "Error extracting LLDP", e
           return
     # IP
     elif ether_type == 0x0800:
@@ -580,7 +585,7 @@ class RESTRequestHandlerCmds(tornado.web.RequestHandler):
     def post(self):
         results = list();
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
-        params = json_loads(self.request.body.decode())
+        params = json.loads(self.request.body.decode())
         print "Execute commands: ", str(params["commands"])
         for cmd in params["commands"]:
            r = send_to_CLI(cmd, cli_ip=params["thrift_ip"], cli_port=params["thrift_port"])

@@ -31,10 +31,10 @@ class Port:
                     host) or not (i.e., connected to a switch)
        :type edge: Boolean
        """
-       self.name = name
-       self.mac = mac
-       self.ip = ip
-       self.prefix = prefix
+       self.name = str(name)
+       self.mac = str(mac)
+       self.ip = str(ip)
+       self.prefix = str(prefix)
        self.index = index
        self.edge = edge
 
