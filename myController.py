@@ -1,10 +1,11 @@
 from controller import *
 import command
 
-class MyOptimization(RESTRequestHandlerOptimization):
+class MyRouting(RESTRequestHandlerRouting):
 
-    def _optimal(self, switch, flow):
+    def _routing(self, switch, flow):
         # determine if we already optimized the flow
+        print ">>>>>>>>>>>???>>", self.url
         _flow = str(flow)
         if _flow in self.topology.flows.keys():
            error_msg = ">>>>>>>>>>> already optimal here from %s for %s" % (switch, _flow)
@@ -51,9 +52,9 @@ class MyOptimization(RESTRequestHandlerOptimization):
                 try:
                     self.pushCommand(_src, _cmd)
                 except Exception as e:
-      	            print "Error with southbound", e
+      	            print "Error with southbound 2", e
 
         return _resp
 
 if __name__ == '__main__':
-    main(MyOptimization)
+    main(MyRouting)

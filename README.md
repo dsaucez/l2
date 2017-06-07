@@ -1,3 +1,10 @@
+# Dependencies
+
+```bash
+$ sudo apt install python-tornado python-requests
+$ sudo apt install arping
+```
+
 # Start the network:
 
 ```bash

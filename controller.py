@@ -26,7 +26,7 @@ PORT = 8000
 # For class abstraction
 import abc
 
-class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
+class RESTRequestHandlerRouting(tornado.web.RequestHandler):
     __metaclass__  = abc.ABCMeta
 
     def initialize(self, topology):
@@ -43,7 +43,7 @@ class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
         push_command(self.topology.G, node, cmd)
 
     @abc.abstractmethod
-    def _optimal(self, switch, flow):
+    def _routing(self, switch, flow):
         """
 	This method optimizes the routing of `flow` in the network upon
         packet_in reception from `switch`
@@ -67,7 +67,7 @@ class RESTRequestHandlerOptimization(tornado.web.RequestHandler):
 
         # call the optimization
         try:
-            _resp = self._optimal(switch, flow)
+            _resp = self._routing(switch, flow)
         except Exception as e:
             self.set_status(304)
             self.finish()
@@ -181,16 +181,17 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
               else:
                   try:
                       _cmd = command.macPort(_mac, _portid)
+                      print "---------------", _cmd
                       push_command(self.topology.T, _src, _cmd)
                   except Exception as e:
-                      print "Error with southbound", e
+                      print "Error with southbound 1", e
            self.finish(json.dumps(_host))
         # if unknown return an error
         else:
            self.set_status(204)
            self.finish()
 
-def main(XXX):
+def main(routing_handler):
     # Topology state
     topology = Topology()
 
@@ -198,7 +199,7 @@ def main(XXX):
     rest_app = tornado.web.Application([
                ("/host", RESTRequestHandlerHost, dict(topology=topology)),
                ("/host/(.*)", RESTRequestHandlerHost, dict(topology=topology)),
-               ("/optimal", XXX, dict(topology=topology)),
+               ("/optimal", routing_handler, dict(topology=topology)),
                ("/link", RESTRequestHandlerLink, dict(topology=topology))
                ])
     rest_server = tornado.httpserver.HTTPServer(rest_app)
@@ -206,4 +207,4 @@ def main(XXX):
     tornado.ioloop.IOLoop.current().start()
 
 if __name__ == '__main__':
-    main(RESTRequestHandlerOptimization)
+    main(RESTRequestHandlerRouting)
