@@ -30,6 +30,19 @@ class MyJSONDecoder(json.JSONDecoder):
         self.parse_string = str_scanstring
         self.scan_once = py_make_scanner(self)
 
+def json_loads(raw):
+   raw_data = json.loads(raw)
+   data = dict()
+   for (k,v) in raw_data.iteritems():
+      print k, type(k)
+      if type(v) == unicode:
+         v = str(v)
+
+      data[str(k)] = v
+   return data
+
+
+
 def json_load(raw):
    raw_data = json.load(raw)
    data = dict()

@@ -5,7 +5,8 @@ import sys
 
 from lldp import create_lldp_packet
 
-from myJson import MyJSONDecoder
+#from myJson import MyJSONDecoder
+from myJson import json_load
 import json
 
 # == sanity checks
@@ -20,7 +21,7 @@ def send_packet(packet, interface):
 
 def main(filename):
     with open(filename) as data_file:
-       data = json.load(data_file, cls=MyJSONDecoder)
+       data = json_load(data_file)
 
        switch_name = data["switch_name"]
        ports = data["ports"]

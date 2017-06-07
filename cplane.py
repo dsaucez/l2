@@ -19,7 +19,7 @@ import requests
 # Project
 from flow import Flow
 from port import Port
-from myJson import MyJSONDecoder
+from myJson import json_loads,json_load
 import lldp
 import cpu
 import command
@@ -79,7 +79,7 @@ def load_config(filename):
     """
     # load configuration
     with open(filename) as data_file:
-        data = json.load(data_file, cls=MyJSONDecoder)
+        data = json_load(data_file)
         switch_name = data["switch_name"]
         thrift_ip = data["thrift_ip"]
         thrift_port = data["thrift_port"]
@@ -213,7 +213,7 @@ def optimal(flow):
 
     # ok, the controller returns us something
     if response.status_code == 200:
-       _resp = json.loads(response.text, cls=MyJSONDecoder)
+       _resp = json_loads(response.text)
     else:
        raise Exception("Could not optimize %s" % flow)
     
@@ -297,7 +297,7 @@ def _get_mac(ip):
 
         # ok, the controller returns us something
         if response.status_code == 200:
-            _resp = json.loads(response.text, cls=MyJSONDecoder)
+            _resp = json_loads(response.text)
             _hwsrc = str(_resp["mac"])         # get the MAC
             _port = _resp["forward_port"]      # get the port to use localy
             _update_mac(ip, _hwsrc, _port, controller=False) # remember the IP:MAC
@@ -580,7 +580,7 @@ class RESTRequestHandlerCmds(tornado.web.RequestHandler):
     def post(self):
         results = list();
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
-        params = json.loads(self.request.body.decode(), cls=MyJSONDecoder)
+        params = json_loads(self.request.body.decode())
         print "Execute commands: ", str(params["commands"])
         for cmd in params["commands"]:
            r = send_to_CLI(cmd, cli_ip=params["thrift_ip"], cli_port=params["thrift_port"])
