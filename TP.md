@@ -94,16 +94,44 @@ In this lab, we will consider the following 4 routing policies.
 #### Minimum spanning tree
 
 A spanning tree _T=(V,E')_ of an undirected graph _G = (V,E)_ is a connected
-tree that includes all the vertices of _G_ such that _E'_ is a subset of _E_.
-A spanning tree is minimum if the the sum of the weight of its edges (i.e.,
-_E'_) is minimum given _G=(V,E)_.
+undirected tree that includes all the vertices of _G_ such that _E'_ is a
+subset of _E_.  A spanning tree is minimum if the the sum of the weight of its
+edges (i.e., _E'_) is minimum given _G=(V,E)_.
 
+Routing on the minimum spanning tree is done by first computing a minimum
+spanning tree of the network. Packets between two nodes (i.e., vertices) are
+forwarded along the shortest of these paths.
 
-#### L2 shortest path routing
+#### L2 destination based shortest path routing
 
-#### L3 shortest path routing
+Layer 2 destination based shortest path routing consists in forwarding Ethernet
+frames to a destination by following one of the shortest paths to that
+destination.
 
-#### L4 shortest path routing with load balancing
+#### L3 destination based shortest path routing
+
+Layer 3 destination based shortest path routing consists in forwarding IP
+packets to a destination by following one of the shortest paths to that
+destination.
+
+#### L4 flow based shortest path routing with load balancing
+
+Layer 4 flow based shortest path routing consists in forwarding all packets
+belonging to the same layer 4 flow by following one of the shortest paths
+between the source and the destination of the packet. When multiple such paths
+exist, one can do load balancing meaning that the traffic can be spread on all
+the paths to the destination.
+
+Different solutions exist to perform load balancing. The two most common
+solution are: 
+
+1. Random: the shortest path to be followed by a packet is selected randomly,
+for each packet.
+
+2. Deterministic: the shortest path to be followed by a packet is selected
+according to a deterministic function, for each packet. To guarantee stability
+of packets of a given flow, the function usually returns the same choice for
+every packet belonging to the same flow.
 
 ## Lab instructions
 
