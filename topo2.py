@@ -187,7 +187,7 @@ def main():
        h.cmd("./beat.sh &")    # launch heart beat on every host
 
     for s in [net.get(n) for n in G.nodes() if G.node[n]["type"] == "switch"]:
-       cmd = "python lldpmain.py config/%s.json &" % (str(s))
+       cmd = "python lldpmain.py config/%s.json 2> log/lldp.%s.err &" % (str(s), str(s))
        print "LLDP on ", s, cmd
        s.cmd(cmd)  # launch LLDP
        

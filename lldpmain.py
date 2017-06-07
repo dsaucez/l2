@@ -1,8 +1,13 @@
-import json
-from lldp import create_lldp_packet
 from scapy.layers.l2 import sendp
 import time
 import sys
+
+
+from lldp import create_lldp_packet
+
+from myJson import MyJSONDecoder
+import json
+
 # == sanity checks
 if len(sys.argv) != 2:
    print "usage %s <configuration file>" % (sys.argv[0])
@@ -15,7 +20,7 @@ def send_packet(packet, interface):
 
 def main(filename):
     with open(filename) as data_file:
-       data = json.load(data_file)
+       data = json.load(data_file, cls=MyJSONDecoder)
 
        switch_name = data["switch_name"]
        ports = data["ports"]
