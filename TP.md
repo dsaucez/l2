@@ -135,14 +135,77 @@ every packet belonging to the same flow.
 
 ## Lab instructions
 
+In this lab you will deploy the following topology with
+[Mininet](http://mininet.org).
+
+![alt text](topo.png "Network topology")
+
+Switches are implemented with [P4](http://p4.org) and the SDN controller is
+implemented in Python just for the sake of this lab.
+
+During the lab session you will implement the *L3 destination based shortest
+path routing* and the *L4 flow based shortest path routing with load balancing*
+in _pull-push_ mode.
+
+Every time a switch receives a packet for which it doesn't know the forwarding
+port, the controller receives a pull request. You will implement the algorithm
+that computes the path to follow for this packets according to your routing
+policy. Once the path is known, you will reply to the requesting switch with
+the port to use (i.e., reply to the _pull_) and push the decision on the other
+switches on ther way to the destination.
+
+### Implementation
+
+#### Prepare your environement
+
+Start your lab virtual machine and log into it (_user/user_).
+
+The lab material is installed in `LAB4` directory. Go in this directory and
+download the latest code needed for the lab:
+
+```bash
+$ cd ~/LAB4/tutorials/examples
+$ git clone https://github.com/dsaucez/l2.git
+$ cd l2
+```
+
+#### Time to code!
+
+The Python program you have to modify is called `myController.py`, located in
+`~/LAB4/tutorials/examples/l2`.
+
+More specifically, you have to implement the `_routing(self, switch, flow)`
+method that receives as input the name of the switch that sent the _pull_
+request and a `Flow` object that is a representation of the packet that
+triggered the request. This method returns the list of commands that the switch
+must execute in order to forward the packets beloging to the flow.
 
 
+the list of commands to be executed
 
+### Testing your code
+We will now start Mininet to emulate the topology, for that, open a new
+terminal
 
+#### 
+```bash
+$ cd ~/LAB4/tutorials/examples/l2
+$ ./start_mininet
+```
 
+This has for effect to start mutliple instances of the 
 
+#### Terminal 2
+```bash
+$ cd LAB4/tutorials/examples/l2
+$ ./start_controller
+```
 
-
+### Terminal 3
+```
+$ cd LAB4/tutorials/examples/l2
+$ ./start_switches
+```
 
 
 

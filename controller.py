@@ -67,7 +67,8 @@ class RESTRequestHandlerRouting(tornado.web.RequestHandler):
 
         # call the optimization
         try:
-            _resp = self._routing(switch, flow)
+            commands = self._routing(switch, flow)
+            _resp = {"commands":commands}
         except Exception as e:
             self.set_status(304)
             self.finish()
