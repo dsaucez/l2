@@ -52,7 +52,7 @@ do
   sysctl net.ipv6.conf.$intf1.disable_ipv6=1
 done
 ########
-$P4C_BM_SCRIPT p4src/counter.p4 --json counter.json
+$P4C_BM_SCRIPT p4src/l2.p4 --json l2.json
 if [ $? -ne 0 ]; then
   echo "Ooops"
   exit
@@ -61,6 +61,6 @@ fi
 $SWITCH_PATH >/dev/null 2>&1
 PYTHONPATH=$PYTHONPATH:$BMV2_PATH/mininet/ python topo2.py \
     --behavioral-exe $SWITCH_PATH \
-    --json counter.json \
+    --json l2.json \
     --cli $CLI_PATH \
     --thrift-port 45001

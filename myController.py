@@ -2,8 +2,27 @@ from controller import *
 import command
 
 class MyRouting(RESTRequestHandlerRouting):
-    def getOnePath(self, src, dst):
-        return self.topology.paths.onePath(_src, _dst)
+    def getPath(self, src, dst, flow):
+        """
+	Returns one valid path between switch `src` and switch `dst` in the
+	opology. The path is represented as a list of string where each item
+        is the name of the switch, in order from `src` to `dst`, included.
+	Example:
+	      if the path from src=a to dst=d is a->b->c->d, then the returned
+              value is ["a", "b", "c", "d"] 
+
+        :param src: origin switch name
+        :type src: string
+
+        :param dst: target switch name
+        :type dst: string
+
+        :param flow: Flow information
+        :type flow:  Flow
+
+        :return: a list of switch names
+        """
+        return self.topology.paths.onePath(src, dst)
 
     def _routing(self, switch, flow):
         # == Sanity checks ===============================================
@@ -24,10 +43,9 @@ class MyRouting(RESTRequestHandlerRouting):
         _src = switch
         _dst = self.topology.hosts[flow.dstAddr].switch
         # ================================================================
-#        _mac = self.topology.hosts[flow.dstAddr].mac
 
         # == Pick one path ===============================================
-        _path = self.getOnePath(_src, _dst)
+        _path = self.getPath(_src, _dst, flow)
         # ================================================================
 
 	# compute the port to use on each switch on the (_src, _dst) path

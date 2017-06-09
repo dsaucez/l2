@@ -174,14 +174,54 @@ $ cd l2
 The Python program you have to modify is called `myController.py`, located in
 `~/LAB4/tutorials/examples/l2`.
 
-More specifically, you have to implement the `_routing(self, switch, flow)`
-method that receives as input the name of the switch that sent the _pull_
-request and a `Flow` object that is a representation of the packet that
-triggered the request. This method returns the list of commands that the switch
-must execute in order to forward the packets beloging to the flow.
+More specifically, you have to implement the `getPath(src, dst, flow)` method
+that returns the path to be used between switches `src` and `dst` for a flow.
 
+To compute the path, the variable `self.topology.G` is a graph representation
+of the topology as learned by the controller. The type of this variable is
+`networkx.classes.graph.Graph`, have a look at
+[1](https://networkx.github.io/documentation/networkx-1.10/reference/algorithms.shortest_paths.html)
+and
+[2](https://networkx.github.io/documentation/networkx-1.10/reference/algorithms.mst.html)
+to see various useful graph algorithms proposed by the NetworkX library.
 
-the list of commands to be executed
+Have a look at the method `_routing(switch, flow)` to see how the _pull-push_
+method is implemented in the controller.
+
+##### Question 1
+
+Modify `getPath(src, dst, flow)` to implement *L3 destination based shortest
+path routing*.
+
+a) Describe your algorithm and implement it.
+
+b) Why is getPath(src, dst, flow) called for every new 5-tuple flow while you
+implemented a L3 destination based shortest path routing? Hint: see method
+`_routing(self, switch, flow)` and file `p4src/l2.p4`.
+
+c) In presence of multiple equal shortest path, how do you decide to chose a
+particular one?
+
+##### Question 2
+
+Modify `getPath(src, dst, flow)` to implement *L4 flow based shortest path
+routing with load balancing*.
+
+a) Describe an algorithm for random load balancing oblivious to network load
+and implement it.
+
+b) Describe an algorithm for deterministic load balancing oblivious to network
+load and implement it.
+
+c) Would it be useful to implement a load balancing technique that accounts for
+the actual load of the network?
+
+   c.i) Does it imply extra communication between the switches and the
+controller?
+
+   c.ii) What are the benefits of accounting for the actual load of the network?
+   
+   c.iii) What are the drawbacks of accounting for the actual load of the network?
 
 ### Testing your code
 We will now start Mininet to emulate the topology, for that, open a new
