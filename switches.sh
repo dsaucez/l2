@@ -1,3 +1,4 @@
+#!/bin/bash
 mkdir log
 for f in config/s*.json
 do

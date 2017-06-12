@@ -32,15 +32,16 @@ class RESTRequestHandlerRouting(tornado.web.RequestHandler):
     def initialize(self, topology):
         self.topology = topology
 
-    def pushCommand(self, node, cmd):
+    def pushCommands(self, node, cmds):
         """
-        :param node: node where to push the command
+        :param node: node where to push the commands
         :type node: string
 
-        :param cmd: command to be executed on the node
-        :type cmd: string
+        :param cmd: commands to be executed on the node
+        :type cmd: list of strings
         """
-        push_command(self.topology.G, node, cmd)
+        for cmd in cmds:
+           push_command(self.topology.G, node, cmd)
 
     @abc.abstractmethod
     def _routing(self, switch, flow):
@@ -112,7 +113,9 @@ class RESTRequestHandlerLink(tornado.web.RequestHandler):
            self.topology.G.add_edge(_s, _d, attr_dict={_s:params[_s], _d:params[_d]})
            self.topology.reset()
            print "Learned link %s - %s" % (_s, _d)
-        
+           if len(self.topology.hosts) == 4 and len(self.topology.G.edges()) == 9:
+              print "READY: topology discovered!"
+
         self.finish()
 
 def push_command(G, node, cmd):
@@ -144,6 +147,9 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
            self.set_status(201)
            host = Host(ip = params["ip"], mac = params["mac"], switch = params["switch"], switch_port = params["switch_port"])
            self.topology.hosts[params["ip"]] = host
+
+           if len(self.topology.hosts) == 4 and len(self.topology.G.edges()) == 9:
+              print "READY: topology discovered!"
 
         # return the uuid for later use
         result = {"uuid":str(host.uuid)}
@@ -183,7 +189,7 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
               else:
                   try:
                       _cmd = command.macPort(_mac, _portid)
-                      print "---------------", _cmd
+                      print "Nope ---------------", _cmd
                       push_command(self.topology.T, _src, _cmd)
                   except Exception as e:
                       print "Error with southbound 1", e
