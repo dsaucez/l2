@@ -7,7 +7,7 @@ way you manage your network. However, it also comes with two great questions:
 2. How to compute routes?
 
 Due to the short time of the lab session and to focus on the concepts, the lab
-will be realised on a simple home-made SDN controller written in Python that
+will be realized on a simple home-made SDN controller written in Python that
 abstracts the technology used to implement SDN. 
 
 ## Background
@@ -62,7 +62,7 @@ The main type of flows used in routing are the following.
 o *Layer 2 destination*: all frames for the same L2 destination (i.e.,
 destination MAC address).
 
-o *Layer 3 destination*: all packets for the same L2 destanation (i.e.,
+o *Layer 3 destination*: all packets for the same L2 destination (i.e.,
 destination IP prefix or destination IP address).
 
 o *5-tuples*: all packets with the same source and destination IP addresses, L4
@@ -92,7 +92,7 @@ nodes (i.e., vertices) along the minimum spanning tree.
 #### Shortest path routing
 
 A path _p(a,b)_ between two edges _a_ and _b_ in a graph _G=(V,E)_ is the
-shortest if there is no path _p'(a,b)_ in _G_ where the sume of the weight of
+shortest if there is no path _p'(a,b)_ in _G_ where the sum of the weight of
 its edges is lower than the one of _p_.
 
 Routing on the shortest path between two edges is done by forwarding packets
@@ -120,26 +120,26 @@ every packet belonging to the same flow.
 In this lab you will deploy the following topology with
 [Mininet](http://mininet.org).
 
-![alt text](topo.png "Network topology")
+![alt text](topology.png "Network topology")
 
 Switches are implemented with [P4](http://p4.org) and the SDN controller is
 implemented in Python just for the sake of this lab.
 
 During the lab session you will first implement shortest path routing for
 *Layer 3 destination* and *5-tuples* flows. You will then implement a mechanism
-to balance the load based on the infromation given by the *5-tuples* flows.
+to balance the load based on the information given by the *5-tuples* flows.
 
 Every time a switch receives a packet for which it doesn't know the forwarding
 port, the controller receives a _pull_ request. You will implement the
 algorithm that computes the path to follow for this packets according to your
 routing policy. Once the path is known, you will reply to the requesting switch
 with the port to use (i.e., reply to the _pull_) and _push_ the decision on the
-other switches on ther way to the destination. This way corresponds to
+other switches on their way to the destination. This way corresponds to
 implementing the _pull-push_ method.
 
 ### Implementation
 
-#### Prepare your environement
+#### Prepare your environment
 
 Start your lab virtual machine and log into it (_user/user_).
 
@@ -213,19 +213,18 @@ of _push_, _pull_, and _pull-push_ methods, respectively?
 ### Testing your code
 
 We use Mininet to emulate the topology. To test your implementation, open a new
-terminal and run the following commands to start mininet.
+terminal and run the following commands to start Mininet.
 
 ```bash
 $ cd ~/LAB4/tutorials/examples/l2
 $ ./start_mininet
 ```
 
-This has for effect to start your controller and to lauchn Mininet with the
-topology presented in the figure above. Starting the environement may take some
+This has for effect to start your controller and to launch Mininet with the
+topology presented in the figure above. Starting the environment may take some
 time, once you see the message `READY: topology discovered!` it means your
 controller discovered the entire topology and you are ready to accept traffic
 between hosts.
-
 
 ##### Question 5
 
@@ -236,14 +235,13 @@ implementations you did in Question 1, 2, and 3.
 Some examples of commands that you may used to implement your application with
 Mininet:
 
-```
-mininet> h11 dd if=/dev/urandom of=BIG count=10 bs=10M
+```bash
+mininet> h21 dd if=/dev/urandom of=BIG count=10 bs=10M
 mininet> h21 python -m SimpleHTTPServer 80 &
 mininet> h11 wget http://192.0.2.21/BIG > /dev/null
 mininet> pingall
 mininet> iperf h11 h22
 ```
-
 
 ##### Bonus question
 

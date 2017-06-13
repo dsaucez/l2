@@ -1,3 +1,7 @@
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 # General
 import json
 import time
@@ -25,6 +29,12 @@ PORT = 8000
 
 # For class abstraction
 import abc
+
+def ready(topology):
+   if len(topology.hosts) == 4 and len(topology.G.edges()) == 9:
+      print "READY: topology discovered!"
+      nx.draw(topology.G, with_labels = True)
+      plt.savefig("graph.png")
 
 class RESTRequestHandlerRouting(tornado.web.RequestHandler):
     __metaclass__  = abc.ABCMeta
@@ -113,8 +123,7 @@ class RESTRequestHandlerLink(tornado.web.RequestHandler):
            self.topology.G.add_edge(_s, _d, attr_dict={_s:params[_s], _d:params[_d]})
            self.topology.reset()
            print "Learned link %s - %s" % (_s, _d)
-           if len(self.topology.hosts) == 4 and len(self.topology.G.edges()) == 9:
-              print "READY: topology discovered!"
+           ready(self.topology)
 
         self.finish()
 
@@ -147,9 +156,7 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
            self.set_status(201)
            host = Host(ip = params["ip"], mac = params["mac"], switch = params["switch"], switch_port = params["switch_port"])
            self.topology.hosts[params["ip"]] = host
-
-           if len(self.topology.hosts) == 4 and len(self.topology.G.edges()) == 9:
-              print "READY: topology discovered!"
+           ready(self.topology)
 
         # return the uuid for later use
         result = {"uuid":str(host.uuid)}
