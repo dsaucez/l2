@@ -1,7 +1,3 @@
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-
 # General
 import json
 import time
@@ -30,11 +26,17 @@ PORT = 8000
 # For class abstraction
 import abc
 
-def ready(topology):
+def ready(topology, plot=False):
    if len(topology.hosts) == 4 and len(topology.G.edges()) == 9:
       print "READY: topology discovered!"
-      nx.draw(topology.G, with_labels = True)
-      plt.savefig("graph.png")
+
+      if plot:
+         import matplotlib as mpl
+         mpl.use('Agg')
+         import matplotlib.pyplot as plt
+
+         nx.draw(topology.G, with_labels = True)
+         plt.savefig("graph.png")
 
 class RESTRequestHandlerRouting(tornado.web.RequestHandler):
     __metaclass__  = abc.ABCMeta

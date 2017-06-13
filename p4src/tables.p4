@@ -15,24 +15,6 @@ limitations under the License.
 */
 
 // == Tables ====================================
-/* Associate an IP prefix to a (next-hop, interface) pair */
-table fib_table {
-   reads {
-      ipv4.dstAddr : lpm;
-   }
-   actions {
-      set_next_hop;
-      set_next_local;
-      _drop;
-      _nop;
-   }
-   size : 256;
-}
-counter fib_table_stats {
-    type : bytes;
-    direct: fib_table;
-}
-
 table mac_table {
    reads {
       ethernet.dstAddr : exact;

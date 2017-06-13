@@ -216,7 +216,7 @@ We use Mininet to emulate the topology. To test your implementation, open a new
 terminal and run the following commands to start Mininet.
 
 ```bash
-$ cd ~/LAB4/tutorials/examples/l2
+$ cd ~/LAB4/tutorials/examples/l2/RESCOM17
 $ ./start_mininet
 ```
 
