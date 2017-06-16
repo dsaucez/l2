@@ -198,7 +198,6 @@ class RESTRequestHandlerHost(tornado.web.RequestHandler):
               else:
                   try:
                       _cmd = command.macPort(_mac, _portid)
-                      print "Nope ---------------", _cmd
                       push_command(self.topology.T, _src, _cmd)
                   except Exception as e:
                       print "Error with southbound 1", e

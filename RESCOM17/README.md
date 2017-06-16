@@ -238,7 +238,7 @@ Mininet:
 ```bash
 mininet> h21 dd if=/dev/urandom of=BIG count=10 bs=10M
 mininet> h21 python -m SimpleHTTPServer 80 &
-mininet> h11 wget http://192.0.2.21/BIG > /dev/null
+mininet> h11 wget http://192.0.2.21/BIG -O /dev/null
 mininet> pingall
 mininet> iperf h11 h22
 ```
