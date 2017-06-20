@@ -45,15 +45,15 @@ import json
 G_json = {'directed': False,
           'graph': {},
           'nodes': [
-             {u'type': 'switch', 'id': 's13', 'thrift_ip': '127.0.0.1', u'thrift_port': 45013, "API": "http://127.0.0.1:8013"}, #0
-             {u'type': 'switch', 'id': 's12', 'thrift_ip': '127.0.0.1', u'thrift_port': 45012, "API": "http://127.0.0.1:8012"}, #1
-             {u'type': 'switch', 'id': 's11', 'thrift_ip': '127.0.0.1', u'thrift_port': 45011, "API": "http://127.0.0.1:8011"}, #2
+             {u'type': 'switch', 'id': 's13', 'thrift_ip': '127.0.0.1', u'thrift_port': 47013, "API": "http://127.0.0.1:8013"}, #0
+             {u'type': 'switch', 'id': 's12', 'thrift_ip': '127.0.0.1', u'thrift_port': 47012, "API": "http://127.0.0.1:8012"}, #1
+             {u'type': 'switch', 'id': 's11', 'thrift_ip': '127.0.0.1', u'thrift_port': 47011, "API": "http://127.0.0.1:8011"}, #2
              {u'ip': '192.0.2.21', u'type': 'host', 'id': 'h21'},                                                               #3
-             {u'type': 'switch', 'id': 's14', 'thrift_ip': '127.0.0.1', u'thrift_port': 45014, "API": "http://127.0.0.1:8014"}, #4
-             {u'type': 'switch', 'id': 's22', 'thrift_ip': '127.0.0.1', u'thrift_port': 45022, "API": "http://127.0.0.1:8022"}, #5
-             {u'type': 'switch', 'id': 's23', 'thrift_ip': '127.0.0.1', u'thrift_port': 45023, "API": "http://127.0.0.1:8023"}, #6
-             {u'type': 'switch', 'id': 's21', 'thrift_ip': '127.0.0.1', u'thrift_port': 45021, "API": "http://127.0.0.1:8021"}, #7
-             {u'type': 'switch', 'id': 's24', 'thrift_ip': '127.0.0.1', u'thrift_port': 45024, "API": "http://127.0.0.1:8024"}, #8
+             {u'type': 'switch', 'id': 's14', 'thrift_ip': '127.0.0.1', u'thrift_port': 47014, "API": "http://127.0.0.1:8014"}, #4
+             {u'type': 'switch', 'id': 's22', 'thrift_ip': '127.0.0.1', u'thrift_port': 47022, "API": "http://127.0.0.1:8022"}, #5
+             {u'type': 'switch', 'id': 's23', 'thrift_ip': '127.0.0.1', u'thrift_port': 47023, "API": "http://127.0.0.1:8023"}, #6
+             {u'type': 'switch', 'id': 's21', 'thrift_ip': '127.0.0.1', u'thrift_port': 47021, "API": "http://127.0.0.1:8021"}, #7
+             {u'type': 'switch', 'id': 's24', 'thrift_ip': '127.0.0.1', u'thrift_port': 47024, "API": "http://127.0.0.1:8024"}, #8
              {u'ip': '192.0.2.11', u'type': 'host', 'id': 'h11'},                                                               #9
              {'ip': '192.0.2.22', 'type': 'host', 'id': 'h22'},                                                                 #10
              {u'ip': '192.0.2.12', u'type': 'host', 'id': 'h12'}],                                                              #11
