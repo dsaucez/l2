@@ -149,13 +149,12 @@ download the latest code needed for the lab:
 ```bash
 $ cd ~/LAB4/tutorials/examples
 $ git clone https://github.com/dsaucez/l2.git
-$ cd l2
 ```
 
 #### Time to code!
 
 The Python program you have to modify is called `myController.py`, located in
-`~/LAB4/tutorials/examples/l2`.
+`~/LAB4/tutorials/examples/l2/RESCOM17`.
 
 More specifically, you have to implement the `getPath(src, dst, flow)` method
 that returns the path to be used between switches `src` and `dst` for a flow.
