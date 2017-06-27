@@ -116,9 +116,9 @@ Distem.client { |cl|
     # Add a route to s10 network on h21 via s20
     cl.vnode_execute('h21', "ip route add 10.164.10.0/24 via 10.164.20.20")
 
-    # Activate forwarding on s10 and s20
-    cl.vnode_execute('s10', "sysctl -w net.ipv4.ip_forward=1")
-    cl.vnode_execute('s20', "sysctl -w net.ipv4.ip_forward=1")
+    # Deactivate forwarding on s10 and s20
+    cl.vnode_execute('s10', "sysctl -w net.ipv4.ip_forward=0")
+    cl.vnode_execute('s20', "sysctl -w net.ipv4.ip_forward=0")
 
     puts "Done"
   else

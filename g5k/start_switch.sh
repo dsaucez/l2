@@ -16,7 +16,7 @@ p4c-bmv2 ../p4src/l2.p4 --json l2.json || exit
 
 # start fast path
 echo "Starting fast path"
-nohup simple_switch --log-console -i 1@if1 -i 2@if2 -i 11@cpu-veth-1 l2.json &
+nohup simple_switch -i 1@if1 -i 2@if2 -i 11@cpu-veth-1 l2.json &
 
 # start slow path
 sleep 30
