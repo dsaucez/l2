@@ -90,6 +90,28 @@ def load_config(filename):
         for d in data["ports"]:
            port = Port(index = d["index"], name = d["name"], mac = d["mac"], ip = d["ip"], prefix = d["prefix"], edge = d["edge"])
            ports[port.index] = port
+
+           # register backbone links to the controller
+           if not d["edge"]:
+              (remote_name, remote_port) = str(d["neighbor"]).split(":")
+              remote_port = int(remote_port)
+              print "link %s:%d -- %s:%d" % (switch_name, d["index"], remote_name, remote_port)
+              # link parameters (see controller API /link)
+	      data = {
+		      "name":switch_name,
+		      "src":remote_name,
+		      "dst":switch_name,
+		      remote_name: remote_port,
+		      switch_name:int(d["index"]),
+		      "API": API,
+		      "thrift_ip":thrift_ip,
+		      "thrift_port":thrift_port
+	      }
+              # send the optimization request to the controller
+              ctrl = "%s:%s" % (controller_ip, controller_port)
+              ctrl = "127.0.0.1:8000"
+              response = requests.post("http://%s/link" % (ctrl), data = json.dumps(data), headers={"Content-Type": "application/json","X-switch-name":switch_name})
+
       
            ip_dic[str(port.ip)]  = str(port.mac)
     
@@ -102,6 +124,7 @@ def load_config(filename):
     print "# IP Dic: ", ip_dic
     print "######################################################"
     # ==============================
+
 
 def flow_size(flow):
     """
