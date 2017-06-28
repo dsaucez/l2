@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 require 'distem'
 
-img_p4 = "file:///home/dsaucez/p4/p4-tornado-lxc-img.tar.gz"
+img_p4 = "file:///home/dsaucez/p4/p4-tornado-networkx-lxc-img.tar.gz"
 img = "file:///home/dsaucez/p4/client-lxc-img.tar.gz"
 hosts = ARGV[0].split(',')
 

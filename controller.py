@@ -116,6 +116,7 @@ class RESTRequestHandlerLink(tornado.web.RequestHandler):
         self.topology.G.node[params["name"]]["thrift_port"] = params["thrift_port"]
         self.topology.G.node[params["name"]]["thrift_ip"] = params["thrift_ip"]
 
+        print "????", _s, " <> ", _d
         # ignore local or links we already know
         if _s == _d or self.topology.G.has_edge(_s,_d):
            self.set_status(200)
