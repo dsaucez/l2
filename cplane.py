@@ -403,11 +403,11 @@ def process_lldp(ether_hdr, port):
     """
 
     # extract LLDP header
-#    chassis_tlv = ether_hdr['Chassis ID'] 
-#    port_tlv = ether_hdr['Port ID'] 
-    lldp_str = ether_hdr
-    chassis_tlv = lldp.Chassis_Id(lldp_str)
-    port_tlv = lldp.Port_Id(lldp_str[(chassis_tlv.length+2):])
+    chassis_tlv = ether_hdr['Chassis ID'] 
+    port_tlv = ether_hdr['Port ID'] 
+#    lldp_str = ether_hdr
+#    chassis_tlv = lldp.Chassis_Id(lldp_str)
+#    port_tlv = lldp.Port_Id(lldp_str[(chassis_tlv.length+2):])
     print "learned %s:%d on port %d " % (chassis_tlv.locallyAssigned, int(port_tlv.locallyAssigned), port)
 
     # link parameters (see controller API /link)
@@ -483,8 +483,8 @@ def process_cpu_pkt(ether_hdr):
        try:
           p_str = str(ether_hdr)
           p_str2 = p_str[:12] + p_str[24:26] + p_str[26:]
-          process_lldp(p_str2[14:], if_index)
-#          process_lldp(ether_hdr, if_index)
+#          process_lldp(p_str2[14:], if_index)
+          process_lldp(ether_hdr, if_index)
           print "LLDP"
           return
        except Exception as e:
